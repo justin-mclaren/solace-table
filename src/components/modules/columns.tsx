@@ -38,21 +38,7 @@ export const columns: ColumnDef<Advocate>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "firstName",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          First Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div>{row.getValue("firstName")}</div>,
-  },
-  {
+    id: "name",
     accessorKey: "lastName",
     header: ({ column }) => {
       return (
@@ -60,12 +46,25 @@ export const columns: ColumnDef<Advocate>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Last Name
+          Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
-    cell: ({ row }) => <div>{row.getValue("lastName")}</div>,
+    cell: ({ row }) => {
+      const advocate = row.original;
+      return (
+        <div className="font-medium">
+          {advocate.firstName} {advocate.lastName}
+        </div>
+      );
+    },
+    filterFn: (row, id, value) => {
+      const advocate = row.original;
+      const fullName =
+        `${advocate.firstName} ${advocate.lastName}`.toLowerCase();
+      return fullName.includes(value.toLowerCase());
+    },
   },
   {
     accessorKey: "city",
