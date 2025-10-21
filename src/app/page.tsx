@@ -5,6 +5,7 @@ import { DataTable } from "@/components/modules/data-table";
 import { columns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
 import { useAdvocates } from "@/hooks/use-advocates";
+import { useFilterOptions } from "@/hooks/use-filter-options";
 import {
   AdvocateFilters,
   AdvocateFilterState,
@@ -55,36 +56,12 @@ export default function Home() {
     return data?.pages.flatMap((page) => page.data) || [];
   }, [data]);
 
-  // For getting all unique values, we need to fetch without filters or search
-  // We'll use a separate query just for getting the filter options
-  const { data: allData } = useAdvocates({
-    search: "",
-    cities: [],
-    degrees: [],
-    specialties: [],
-    experienceRanges: [],
-  });
+  // Fetch filter options from dedicated endpoint
+  const { data: filterOptions } = useFilterOptions();
 
-  // Extract unique values for filter options from unfiltered data
-  const { availableCities, availableDegrees, availableSpecialties } =
-    useMemo(() => {
-      const allAdvocates = allData?.pages.flatMap((page) => page.data) || [];
-      const cities = new Set<string>();
-      const degrees = new Set<string>();
-      const specialties = new Set<string>();
-
-      allAdvocates.forEach((advocate) => {
-        cities.add(advocate.city);
-        degrees.add(advocate.degree);
-        advocate.specialties.forEach((specialty) => specialties.add(specialty));
-      });
-
-      return {
-        availableCities: Array.from(cities).sort(),
-        availableDegrees: Array.from(degrees).sort(),
-        availableSpecialties: Array.from(specialties).sort(),
-      };
-    }, [allData]);
+  const availableCities = filterOptions?.cities || [];
+  const availableDegrees = filterOptions?.degrees || [];
+  const availableSpecialties = filterOptions?.specialties || [];
 
   return (
     <main className="container mx-auto pt-10">
