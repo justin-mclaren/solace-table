@@ -17,6 +17,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Avvvatars from "avvvatars-react";
 
 export const columns: ColumnDef<Advocate>[] = [
   {
@@ -35,9 +36,17 @@ export const columns: ColumnDef<Advocate>[] = [
     },
     cell: ({ row }) => {
       const advocate = row.original;
+      const initials = `${advocate.firstName[0]}${advocate.lastName[0]}`;
       return (
-        <div className="font-medium">
-          {advocate.firstName} {advocate.lastName}
+        <div className="flex items-center gap-3">
+          <Avvvatars
+            value={`${advocate.firstName} ${advocate.lastName}`}
+            displayValue={initials}
+            size={32}
+          />
+          <span className="font-medium">
+            {advocate.firstName} {advocate.lastName}
+          </span>
         </div>
       );
     },

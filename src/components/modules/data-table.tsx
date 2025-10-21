@@ -233,7 +233,10 @@ export function DataTable<TData, TValue>({
                           }}
                         >
                           <TableCell style={COLUMN_STYLES[0]}>
-                            <Skeleton className="h-4 w-[120px]" />
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <Skeleton className="h-4 w-[120px]" />
+                            </div>
                           </TableCell>
                           <TableCell style={COLUMN_STYLES[1]}>
                             <Skeleton className="h-4 w-[100px]" />
