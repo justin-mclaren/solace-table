@@ -79,12 +79,8 @@ export const columns: ColumnDef<Advocate>[] = [
     cell: ({ row }) => {
       const specialties = row.getValue("specialties") as string[];
       return (
-        <div className="flex flex-col gap-1">
-          {specialties.map((specialty, index) => (
-            <div key={index} className="text-sm">
-              {specialty}
-            </div>
-          ))}
+        <div className="max-h-[40px] overflow-hidden">
+          <div className="text-sm truncate">{specialties.join(", ")}</div>
         </div>
       );
     },

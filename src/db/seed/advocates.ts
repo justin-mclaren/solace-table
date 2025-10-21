@@ -31,9 +31,8 @@ const specialties = [
 
 const degrees = ["MD", "PhD", "MSW", "PsyD", "LCSW", "LPC", "LMFT"];
 
-// Function to generate random specialties (2-5 specialties per advocate)
 const getRandomSpecialties = () => {
-  const count = faker.number.int({ min: 2, max: 5 });
+  const count = faker.number.int({ min: 2, max: 24 });
   const shuffled = [...specialties].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 };
@@ -49,7 +48,7 @@ const generateAdvocate = () => ({
   phoneNumber: parseInt(faker.string.numeric(10)),
 });
 
-const ADVOCATE_COUNT = 500;
+const ADVOCATE_COUNT = 10_000;
 
 const advocateData = Array.from({ length: ADVOCATE_COUNT }, generateAdvocate);
 

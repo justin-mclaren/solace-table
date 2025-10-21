@@ -12,6 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -54,7 +55,7 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
-  const loadMoreRef = React.useRef<HTMLDivElement>(null);
+  const tableContainerRef = React.useRef<HTMLDivElement>(null);
 
   const table = useReactTable({
     data,
@@ -72,30 +73,40 @@ export function DataTable<TData, TValue>({
     },
   });
 
-  // Intersection Observer for infinite scroll
+  const { rows } = table.getRowModel();
+
+  // Add skeleton rows count
+  const totalRows = rows.length + (isFetchingNextPage ? 5 : 0);
+
+  // Virtualizer
+  const rowVirtualizer = useVirtualizer({
+    count: totalRows,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 53, // Approximate row height in pixels
+    overscan: 10, // Render 10 extra rows above and below viewport
+  });
+
+  // Infinite scroll based on scroll position
   React.useEffect(() => {
-    if (!onLoadMore || !hasMore || isFetchingNextPage) return;
+    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          onLoadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
+    if (!lastItem) return;
 
-    const currentRef = loadMoreRef.current;
-    if (currentRef) {
-      observer.observe(currentRef);
+    if (
+      lastItem.index >= rows.length - 1 &&
+      hasMore &&
+      !isFetchingNextPage &&
+      onLoadMore
+    ) {
+      onLoadMore();
     }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef);
-      }
-    };
-  }, [onLoadMore, hasMore, isFetchingNextPage]);
+  }, [
+    hasMore,
+    isFetchingNextPage,
+    onLoadMore,
+    rows.length,
+    rowVirtualizer.getVirtualItems(),
+  ]);
 
   return (
     <div className="w-full">
@@ -145,73 +156,74 @@ export function DataTable<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <div className="rounded-md border">
+      <div
+        ref={tableContainerRef}
+        className="rounded-md border"
+        style={{ height: "600px", overflow: "auto" }}
+      >
+        {/* Sticky Header */}
+        <div
+          className="sticky top-0 z-10 border-b"
+          style={{
+            backgroundColor: "hsl(var(--background))",
+          }}
+        >
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow
+                  key={headerGroup.id}
+                  style={{
+                    display: "flex",
+                    width: "100%",
+                  }}
+                >
+                  {headerGroup.headers.map((header, index) => {
+                    // Match the same widths as body cells
+                    const widths = {
+                      0: "200px", // Name
+                      1: "150px", // City
+                      2: "120px", // Degree
+                      3: "auto", // Specialties (flexible)
+                      4: "150px", // Years of Experience
+                      5: "180px", // Phone Number
+                      6: "80px", // Actions
+                    };
+
+                    return (
+                      <TableHead
+                        key={header.id}
+                        style={{
+                          flex:
+                            index === 3
+                              ? "1 1 auto"
+                              : `0 0 ${widths[index as keyof typeof widths]}`,
+                        }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+          </Table>
+        </div>
+
+        {/* Scrollable Body */}
         <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              <>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-                {/* Skeleton rows while loading more */}
-                {isFetchingNextPage &&
-                  Array.from({ length: 5 }).map((_, index) => (
-                    <TableRow key={`skeleton-${index}`}>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[120px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[100px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[80px]" />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Skeleton className="h-3 w-[90px]" />
-                          <Skeleton className="h-3 w-[110px]" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[40px] mx-auto" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-[130px]" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-8 w-8" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </>
-            ) : (
+          <TableBody
+            style={{
+              height: `${rowVirtualizer.getTotalSize()}px`,
+              position: "relative",
+            }}
+          >
+            {rows.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -220,15 +232,107 @@ export function DataTable<TData, TValue>({
                   No results.
                 </TableCell>
               </TableRow>
+            ) : (
+              <>
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const isLoaderRow = virtualRow.index >= rows.length;
+
+                  if (isLoaderRow) {
+                    // Skeleton row
+                    return (
+                      <TableRow
+                        key={`skeleton-${virtualRow.index}`}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                      >
+                        <TableCell style={{ flex: "0 0 200px" }}>
+                          <Skeleton className="h-4 w-[120px]" />
+                        </TableCell>
+                        <TableCell style={{ flex: "0 0 150px" }}>
+                          <Skeleton className="h-4 w-[100px]" />
+                        </TableCell>
+                        <TableCell style={{ flex: "0 0 120px" }}>
+                          <Skeleton className="h-4 w-[80px]" />
+                        </TableCell>
+                        <TableCell style={{ flex: "1 1 auto" }}>
+                          <Skeleton className="h-4 w-[200px]" />
+                        </TableCell>
+                        <TableCell style={{ flex: "0 0 150px" }}>
+                          <Skeleton className="h-4 w-[40px] mx-auto" />
+                        </TableCell>
+                        <TableCell style={{ flex: "0 0 180px" }}>
+                          <Skeleton className="h-4 w-[130px]" />
+                        </TableCell>
+                        <TableCell style={{ flex: "0 0 80px" }}>
+                          <Skeleton className="h-8 w-8" />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
+                  const row = rows[virtualRow.index];
+                  return (
+                    <TableRow
+                      key={row.id}
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell, index) => {
+                        // Define widths for each column to match header
+                        const widths = {
+                          0: "200px", // Name
+                          1: "150px", // City
+                          2: "120px", // Degree
+                          3: "auto", // Specialties (flexible)
+                          4: "150px", // Years of Experience
+                          5: "180px", // Phone Number
+                          6: "80px", // Actions
+                        };
+
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            style={{
+                              flex:
+                                index === 3
+                                  ? "1 1 auto"
+                                  : `0 0 ${widths[index as keyof typeof widths]}`,
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  );
+                })}
+              </>
             )}
           </TableBody>
         </Table>
-      </div>
 
-      {/* Infinite scroll trigger */}
-      <div ref={loadMoreRef} className="flex items-center justify-center py-4">
-        {!isFetchingNextPage && !hasMore && (
-          <div className="text-sm text-muted-foreground">
+        {/* End of list indicator */}
+        {!isFetchingNextPage && !hasMore && rows.length > 0 && (
+          <div className="flex items-center justify-center py-4 text-sm text-muted-foreground">
             All advocates loaded
           </div>
         )}
