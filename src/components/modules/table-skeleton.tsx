@@ -12,26 +12,31 @@ export function TableSkeleton() {
   return (
     <div className="w-full">
       {/* Search input skeleton */}
-      <div className="mb-6">
-        <Skeleton className="h-10 w-full" />
+      <div className="mb-6 max-w-3xl px-4 md:px-0">
+        <Skeleton className="h-12 w-full rounded-full" />
       </div>
 
-      {/* Filter dropdowns skeleton */}
-      <div className="flex flex-wrap gap-3 items-center mb-6">
-        <Skeleton className="h-9 w-[120px]" />
-        <Skeleton className="h-9 w-[120px]" />
-        <Skeleton className="h-9 w-[140px]" />
-        <Skeleton className="h-9 w-[130px]" />
+      {/* Filter dropdowns skeleton - mobile shows button, desktop shows filters */}
+      <div className="mb-6 px-4 md:px-0">
+        <div className="md:hidden">
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <div className="hidden md:flex flex-wrap gap-3 items-center">
+          <Skeleton className="h-9 w-[120px]" />
+          <Skeleton className="h-9 w-[120px]" />
+          <Skeleton className="h-9 w-[140px]" />
+          <Skeleton className="h-9 w-[130px]" />
+        </div>
       </div>
 
       {/* Count and column selector row skeleton */}
-      <div className="flex items-center justify-between py-4">
+      <div className="flex items-center justify-between py-4 px-4 md:px-0">
         <Skeleton className="h-4 w-[150px]" />
         <Skeleton className="h-9 w-[100px]" />
       </div>
 
       {/* Table skeleton */}
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-white">
         <Table>
           <TableHeader>
             <TableRow>

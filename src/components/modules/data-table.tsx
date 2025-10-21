@@ -125,7 +125,7 @@ export function DataTable<TData, TValue>({
   return (
     <TooltipProvider>
       <div className="w-full">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-4 px-4 md:px-0">
           <div className="text-sm text-muted-foreground">
             {totalCount} advocates found
           </div>
@@ -158,16 +158,11 @@ export function DataTable<TData, TValue>({
         </div>
         <div
           ref={tableContainerRef}
-          className="rounded-md border"
+          className="rounded-md border bg-white"
           style={{ height: "calc(100vh - 250px)", overflow: "auto" }}
         >
           {/* Sticky Header */}
-          <div
-            className="sticky top-0 z-10 border-b"
-            style={{
-              backgroundColor: "hsl(var(--background))",
-            }}
-          >
+          <div className="sticky top-0 z-10 border-b bg-white">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
