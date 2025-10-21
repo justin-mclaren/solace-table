@@ -2,6 +2,7 @@
 
 import { DataTable } from "@/components/modules/data-table";
 import { columns } from "@/components/modules/columns";
+import { TableSkeleton } from "@/components/modules/table-skeleton";
 import { useAdvocates } from "@/hooks/use-advocates";
 
 export default function Home() {
@@ -11,7 +12,7 @@ export default function Home() {
     <main className="container mx-auto py-10">
       <h1 className="text-4xl font-bold mb-8">Solace Advocates</h1>
       {isLoading ? (
-        <div className="text-center py-10">Loading advocates...</div>
+        <TableSkeleton />
       ) : isError ? (
         <div className="text-center py-10 text-red-600">
           Error loading advocates: {error?.message}
