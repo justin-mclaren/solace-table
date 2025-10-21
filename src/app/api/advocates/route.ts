@@ -53,27 +53,27 @@ export async function GET(request: Request) {
     const experienceConditions = experienceRanges
       .map((range) => {
         switch (range) {
-          case "0-5 years":
+          case "0-5":
             return and(
               gte(advocates.yearsOfExperience, 0),
               lte(advocates.yearsOfExperience, 5)
             );
-          case "6-10 years":
+          case "6-10":
             return and(
               gte(advocates.yearsOfExperience, 6),
               lte(advocates.yearsOfExperience, 10)
             );
-          case "11-15 years":
+          case "11-15":
             return and(
               gte(advocates.yearsOfExperience, 11),
               lte(advocates.yearsOfExperience, 15)
             );
-          case "16-20 years":
+          case "16-20":
             return and(
               gte(advocates.yearsOfExperience, 16),
               lte(advocates.yearsOfExperience, 20)
             );
-          case "21+ years":
+          case "21+":
             return gte(advocates.yearsOfExperience, 21);
           default:
             return null;

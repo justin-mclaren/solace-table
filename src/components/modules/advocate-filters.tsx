@@ -29,7 +29,7 @@ interface AdvocateFiltersProps {
 // Multi-select popover component
 interface MultiSelectPopoverProps {
   title: string;
-  options: string[];
+  options: Array<{ value: string; label: string }> | string[];
   selectedValues: string[];
   onSelectedValuesChange: (values: string[]) => void;
   searchPlaceholder?: string;
@@ -45,8 +45,14 @@ function MultiSelectPopover({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredOptions = options.filter((option) =>
-    option.toLowerCase().includes(searchTerm.toLowerCase())
+  // Normalize options to always have value/label structure
+  const normalizedOptions = options.map((opt) =>
+    typeof opt === "string" ? { value: opt, label: opt } : opt
+  );
+
+  // Filter by label
+  const filteredOptions = normalizedOptions.filter((option) =>
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleToggle = (value: string) => {
@@ -65,9 +71,19 @@ function MultiSelectPopover({
     if (selectedValues.length === 0) {
       return title;
     } else if (selectedValues.length === 1) {
-      return selectedValues[0];
+      // Find the label for the selected value
+      const selectedOption = normalizedOptions.find(
+        (opt) => opt.value === selectedValues[0]
+      );
+      return selectedOption?.label || selectedValues[0];
     } else if (selectedValues.length <= 2) {
-      return selectedValues.join(", ");
+      // Map values to labels
+      return selectedValues
+        .map((val) => {
+          const opt = normalizedOptions.find((o) => o.value === val);
+          return opt?.label || val;
+        })
+        .join(", ");
     } else {
       return `${selectedValues.length} selected`;
     }
@@ -124,14 +140,14 @@ function MultiSelectPopover({
             <div className="p-1">
               {filteredOptions.map((option) => (
                 <button
-                  key={option}
+                  key={option.value}
                   className={`relative flex w-full cursor-pointer items-center gap-2 rounded-sm py-2 pr-8 pl-2 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground ${
-                    selectedValues.includes(option) ? "font-medium" : ""
+                    selectedValues.includes(option.value) ? "font-medium" : ""
                   }`}
-                  onClick={() => handleToggle(option)}
+                  onClick={() => handleToggle(option.value)}
                 >
-                  <span className="flex-1 text-left">{option}</span>
-                  {selectedValues.includes(option) && (
+                  <span className="flex-1 text-left">{option.label}</span>
+                  {selectedValues.includes(option.value) && (
                     <span className="absolute right-2 flex size-3.5 items-center justify-center">
                       <Check className="h-4 w-4" />
                     </span>
@@ -223,7 +239,7 @@ export function AdvocateFilters({
         {/* Experience Range Filter */}
         <MultiSelectPopover
           title="Experience"
-          options={EXPERIENCE_RANGES.map((r) => r.label)}
+          options={EXPERIENCE_RANGES}
           selectedValues={filters.experienceRanges}
           onSelectedValuesChange={(values) =>
             updateFilter("experienceRanges", values)
