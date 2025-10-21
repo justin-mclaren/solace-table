@@ -8,7 +8,12 @@ const setup = () => {
       select: () => ({
         from: () => [],
       }),
-    };
+      insert: () => ({
+        values: () => ({
+          returning: () => [],
+        }),
+      }),
+    } as any;
   }
 
   // for query purposes
