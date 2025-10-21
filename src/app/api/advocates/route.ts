@@ -91,16 +91,17 @@ export async function GET(request: Request) {
 
   // For specialty filtering, we need to filter advocates that have ANY of the selected specialties
   if (specialtyNames.length > 0) {
-    const escapedNames = specialtyNames
-      .map((n) => `'${n.replace(/'/g, "''")}'`)
-      .join(",");
-    const specialtyCondition = sql`EXISTS (
-      SELECT 1 FROM ${advocateSpecialties}
-      JOIN ${specialties} ON ${advocateSpecialties.specialtyId} = ${specialties.id}
-      WHERE ${advocateSpecialties.advocateId} = ${advocates.id}
-      AND ${specialties.name} IN (${sql.raw(escapedNames)})
-    )`;
-    advocateConditions.push(specialtyCondition);
+    // Use subquery to find advocate IDs that match any of the selected specialties
+    const matchingAdvocateIds = db
+      .select({ id: advocateSpecialties.advocateId })
+      .from(advocateSpecialties)
+      .innerJoin(
+        specialties,
+        eq(advocateSpecialties.specialtyId, specialties.id)
+      )
+      .where(inArray(specialties.name, specialtyNames));
+
+    advocateConditions.push(inArray(advocates.id, matchingAdvocateIds));
   }
 
   const whereClause =
