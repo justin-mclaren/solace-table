@@ -87,11 +87,6 @@ export function TableSkeleton() {
           </TableBody>
         </Table>
       </div>
-
-      {/* Loading indicator skeleton */}
-      <div className="flex items-center justify-center py-4">
-        <Skeleton className="h-4 w-[150px]" />
-      </div>
     </div>
   );
 }
