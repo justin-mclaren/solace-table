@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { DataTable } from "@/components/modules/data-table";
 import { columns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
@@ -9,8 +9,24 @@ import {
   AdvocateFilters,
   AdvocateFilterState,
 } from "@/components/modules/advocate-filters";
+import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // Filter state
   const [filters, setFilters] = useState<AdvocateFilterState>({
     cities: [],
@@ -19,7 +35,7 @@ export default function Home() {
     experienceRanges: [],
   });
 
-  // Fetch advocates with filters applied at the API level
+  // Fetch advocates with filters and search applied at the API level
   const {
     data,
     isLoading,
@@ -29,16 +45,20 @@ export default function Home() {
     hasNextPage,
     isFetchingNextPage,
     totalCount,
-  } = useAdvocates(filters);
+  } = useAdvocates({
+    search: debouncedSearch,
+    ...filters,
+  });
 
   // Flatten the paginated data
   const advocates = useMemo(() => {
     return data?.pages.flatMap((page) => page.data) || [];
   }, [data]);
 
-  // For getting all unique values, we need to fetch without filters
+  // For getting all unique values, we need to fetch without filters or search
   // We'll use a separate query just for getting the filter options
   const { data: allData } = useAdvocates({
+    search: "",
     cities: [],
     degrees: [],
     specialties: [],
@@ -68,16 +88,37 @@ export default function Home() {
 
   return (
     <main className="container mx-auto pt-10">
-      <h1 className="text-4xl font-bold mb-8">Solace Advocates</h1>
+      {/* <h1 className="text-4xl font-bold mb-8">Solace Advocates</h1> */}
 
-      {isLoading ? (
-        <TableSkeleton />
-      ) : isError ? (
+      {isError ? (
         <div className="text-center py-10 text-red-600">
           Error loading advocates: {error?.message}
         </div>
+      ) : isLoading && !data ? (
+        <TableSkeleton />
       ) : (
         <>
+          {/* Search Input */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search advocates by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
           {/* Filters */}
           <AdvocateFilters
             filters={filters}
@@ -88,11 +129,6 @@ export default function Home() {
             className="mb-6"
           />
 
-          {/* Results count */}
-          <div className="mb-4 text-sm text-muted-foreground">
-            {totalCount} advocates found
-          </div>
-
           {/* Data Table */}
           <DataTable
             columns={columns}
@@ -100,6 +136,7 @@ export default function Home() {
             onLoadMore={fetchNextPage}
             hasMore={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
+            totalCount={totalCount}
           />
         </>
       )}

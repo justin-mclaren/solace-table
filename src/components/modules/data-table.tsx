@@ -40,6 +40,7 @@ interface DataTableProps<TData, TValue> {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isFetchingNextPage?: boolean;
+  totalCount?: number;
 }
 
 // Shared column styles for consistent header and body alignment
@@ -63,6 +64,7 @@ export function DataTable<TData, TValue>({
   onLoadMore,
   hasMore,
   isFetchingNextPage,
+  totalCount = 0,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -123,10 +125,13 @@ export function DataTable<TData, TValue>({
   return (
     <TooltipProvider>
       <div className="w-full">
-        <div className="flex items-center justify-end py-4">
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-muted-foreground">
+            {totalCount} advocates found
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
+              <Button variant="outline">
                 Columns <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

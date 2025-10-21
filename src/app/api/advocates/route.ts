@@ -1,6 +1,6 @@
 import db from "@/db";
 import { advocates, specialties, advocateSpecialties } from "@/db/schema";
-import { sql, and, inArray, or, gte, lte, eq } from "drizzle-orm";
+import { sql, and, inArray, or, gte, lte, eq, ilike } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -8,6 +8,7 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get("limit") || "20");
 
   // Get filter parameters
+  const search = searchParams.get("search") || "";
   const cities = searchParams.get("cities")?.split(",").filter(Boolean) || [];
   const degrees = searchParams.get("degrees")?.split(",").filter(Boolean) || [];
   const specialtyNames =
@@ -19,6 +20,25 @@ export async function GET(request: Request) {
 
   // Build base WHERE conditions for advocates table
   const advocateConditions = [];
+
+  // Search across name, city, and specialties
+  if (search) {
+    const searchPattern = `%${search}%`;
+    advocateConditions.push(
+      or(
+        ilike(advocates.firstName, searchPattern),
+        ilike(advocates.lastName, searchPattern),
+        ilike(advocates.city, searchPattern),
+        // Search in specialties via subquery
+        sql`EXISTS (
+          SELECT 1 FROM ${advocateSpecialties}
+          INNER JOIN ${specialties} ON ${advocateSpecialties.specialtyId} = ${specialties.id}
+          WHERE ${advocateSpecialties.advocateId} = ${advocates.id}
+          AND ${specialties.name} ILIKE ${searchPattern}
+        )`
+      )
+    );
+  }
 
   if (cities.length > 0) {
     advocateConditions.push(inArray(advocates.city, cities));

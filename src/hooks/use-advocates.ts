@@ -10,6 +10,7 @@ interface AdvocatesResponse {
 }
 
 export interface AdvocateFilters {
+  search?: string;
   cities: string[];
   degrees: string[];
   specialties: string[];
@@ -27,6 +28,11 @@ async function fetchAdvocates({
     page: pageParam.toString(),
     limit: "20",
   });
+
+  // Add search parameter
+  if (filters.search) {
+    params.append("search", filters.search);
+  }
 
   // Add filter parameters
   if (filters.cities.length > 0) {
@@ -53,6 +59,7 @@ async function fetchAdvocates({
 
 export function useAdvocates(
   filters: AdvocateFilters = {
+    search: "",
     cities: [],
     degrees: [],
     specialties: [],
@@ -64,6 +71,7 @@ export function useAdvocates(
     queryFn: ({ pageParam }) => fetchAdvocates({ pageParam, filters }),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
+    placeholderData: (previousData) => previousData,
   });
 
   // Get total count from the first page response
