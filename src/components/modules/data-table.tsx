@@ -88,8 +88,10 @@ export function DataTable<TData, TValue>({
   });
 
   // Infinite scroll based on scroll position
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
   React.useEffect(() => {
-    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
+    const [lastItem] = [...virtualItems].reverse();
 
     if (!lastItem) return;
 
@@ -101,13 +103,7 @@ export function DataTable<TData, TValue>({
     ) {
       onLoadMore();
     }
-  }, [
-    hasMore,
-    isFetchingNextPage,
-    onLoadMore,
-    rows.length,
-    rowVirtualizer.getVirtualItems(),
-  ]);
+  }, [hasMore, isFetchingNextPage, onLoadMore, rows.length, virtualItems]);
 
   return (
     <TooltipProvider>
@@ -235,7 +231,7 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ) : (
                 <>
-                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  {virtualItems.map((virtualRow) => {
                     const isLoaderRow = virtualRow.index >= rows.length;
 
                     if (isLoaderRow) {
