@@ -123,25 +123,7 @@ export function DataTable<TData, TValue>({
   return (
     <TooltipProvider>
       <div className="w-full">
-        <div className="flex items-center py-4 gap-4">
-          <Input
-            placeholder="Filter by name..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn("name")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
-          <Input
-            placeholder="Filter by specialties..."
-            value={
-              (table.getColumn("specialties")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn("specialties")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+        <div className="flex items-center justify-end py-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
