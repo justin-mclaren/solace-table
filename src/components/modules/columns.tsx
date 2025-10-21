@@ -79,8 +79,11 @@ export const columns: ColumnDef<Advocate>[] = [
     cell: ({ row }) => {
       const specialties = row.getValue("specialties") as string[];
       return (
-        <div className="max-h-[40px] overflow-hidden">
-          <div className="text-sm truncate">{specialties.join(", ")}</div>
+        <div
+          className="text-sm overflow-hidden whitespace-nowrap"
+          style={{ textOverflow: "ellipsis" }}
+        >
+          {specialties.join(", ")}
         </div>
       );
     },
@@ -99,7 +102,7 @@ export const columns: ColumnDef<Advocate>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Years of Experience
+          Experience
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );

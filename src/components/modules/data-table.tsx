@@ -159,7 +159,7 @@ export function DataTable<TData, TValue>({
       <div
         ref={tableContainerRef}
         className="rounded-md border"
-        style={{ height: "600px", overflow: "auto" }}
+        style={{ height: "calc(100vh - 250px)", overflow: "auto" }}
       >
         {/* Sticky Header */}
         <div
@@ -179,27 +179,26 @@ export function DataTable<TData, TValue>({
                   }}
                 >
                   {headerGroup.headers.map((header, index) => {
-                    // Match the same widths as body cells
-                    const widths = {
-                      0: "200px", // Name
-                      1: "150px", // City
-                      2: "120px", // Degree
-                      3: "auto", // Specialties (flexible)
-                      4: "150px", // Years of Experience
-                      5: "180px", // Phone Number
-                      6: "80px", // Actions
+                    // Flex ratios and min widths for responsive columns
+                    const columnStyles = {
+                      0: { flex: "2 1 0", minWidth: "150px" }, // Name - wider
+                      1: { flex: "1.5 1 0", minWidth: "120px" }, // City
+                      2: { flex: "0.8 1 0", minWidth: "80px" }, // Degree - smaller
+                      3: {
+                        flex: "3 1 0",
+                        minWidth: "200px",
+                        maxWidth: "500px",
+                      }, // Specialties - most flexible
+                      4: { flex: "1 1 0", minWidth: "100px" }, // Years of Experience - smaller
+                      5: { flex: "1.5 1 0", minWidth: "140px" }, // Phone Number
+                      6: { flex: "0.5 0 0", minWidth: "60px" }, // Actions - smallest
                     };
 
+                    const style =
+                      columnStyles[index as keyof typeof columnStyles];
+
                     return (
-                      <TableHead
-                        key={header.id}
-                        style={{
-                          flex:
-                            index === 3
-                              ? "1 1 auto"
-                              : `0 0 ${widths[index as keyof typeof widths]}`,
-                        }}
-                      >
+                      <TableHead key={header.id} style={style}>
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -253,25 +252,39 @@ export function DataTable<TData, TValue>({
                           alignItems: "center",
                         }}
                       >
-                        <TableCell style={{ flex: "0 0 200px" }}>
+                        <TableCell style={{ flex: "2 1 0", minWidth: "150px" }}>
                           <Skeleton className="h-4 w-[120px]" />
                         </TableCell>
-                        <TableCell style={{ flex: "0 0 150px" }}>
+                        <TableCell
+                          style={{ flex: "1.5 1 0", minWidth: "120px" }}
+                        >
                           <Skeleton className="h-4 w-[100px]" />
                         </TableCell>
-                        <TableCell style={{ flex: "0 0 120px" }}>
+                        <TableCell
+                          style={{ flex: "0.8 1 0", minWidth: "80px" }}
+                        >
                           <Skeleton className="h-4 w-[80px]" />
                         </TableCell>
-                        <TableCell style={{ flex: "1 1 auto" }}>
+                        <TableCell
+                          style={{
+                            flex: "3 1 0",
+                            minWidth: "200px",
+                            maxWidth: "500px",
+                          }}
+                        >
                           <Skeleton className="h-4 w-[200px]" />
                         </TableCell>
-                        <TableCell style={{ flex: "0 0 150px" }}>
+                        <TableCell style={{ flex: "1 1 0", minWidth: "100px" }}>
                           <Skeleton className="h-4 w-[40px] mx-auto" />
                         </TableCell>
-                        <TableCell style={{ flex: "0 0 180px" }}>
+                        <TableCell
+                          style={{ flex: "1.5 1 0", minWidth: "140px" }}
+                        >
                           <Skeleton className="h-4 w-[130px]" />
                         </TableCell>
-                        <TableCell style={{ flex: "0 0 80px" }}>
+                        <TableCell
+                          style={{ flex: "0.5 0 0", minWidth: "60px" }}
+                        >
                           <Skeleton className="h-8 w-8" />
                         </TableCell>
                       </TableRow>
@@ -294,27 +307,26 @@ export function DataTable<TData, TValue>({
                       }}
                     >
                       {row.getVisibleCells().map((cell, index) => {
-                        // Define widths for each column to match header
-                        const widths = {
-                          0: "200px", // Name
-                          1: "150px", // City
-                          2: "120px", // Degree
-                          3: "auto", // Specialties (flexible)
-                          4: "150px", // Years of Experience
-                          5: "180px", // Phone Number
-                          6: "80px", // Actions
+                        // Match header flex ratios and min widths
+                        const columnStyles = {
+                          0: { flex: "2 1 0", minWidth: "150px" }, // Name - wider
+                          1: { flex: "1.5 1 0", minWidth: "120px" }, // City
+                          2: { flex: "0.8 1 0", minWidth: "80px" }, // Degree - smaller
+                          3: {
+                            flex: "3 1 0",
+                            minWidth: "200px",
+                            maxWidth: "500px",
+                          }, // Specialties - most flexible
+                          4: { flex: "1 1 0", minWidth: "100px" }, // Years of Experience - smaller
+                          5: { flex: "1.5 1 0", minWidth: "140px" }, // Phone Number
+                          6: { flex: "0.5 0 0", minWidth: "60px" }, // Actions - smallest
                         };
 
+                        const style =
+                          columnStyles[index as keyof typeof columnStyles];
+
                         return (
-                          <TableCell
-                            key={cell.id}
-                            style={{
-                              flex:
-                                index === 3
-                                  ? "1 1 auto"
-                                  : `0 0 ${widths[index as keyof typeof widths]}`,
-                            }}
-                          >
+                          <TableCell key={cell.id} style={style}>
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext()
