@@ -27,12 +27,8 @@
           "name": "advocate_specialties_advocate_id_advocates_id_fk",
           "tableFrom": "advocate_specialties",
           "tableTo": "advocates",
-          "columnsFrom": [
-            "advocate_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["advocate_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -40,12 +36,8 @@
           "name": "advocate_specialties_specialty_id_specialties_id_fk",
           "tableFrom": "advocate_specialties",
           "tableTo": "specialties",
-          "columnsFrom": [
-            "specialty_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["specialty_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -53,10 +45,7 @@
       "compositePrimaryKeys": {
         "advocate_specialties_advocate_id_specialty_id_pk": {
           "name": "advocate_specialties_advocate_id_specialty_id_pk",
-          "columns": [
-            "advocate_id",
-            "specialty_id"
-          ]
+          "columns": ["advocate_id", "specialty_id"]
         }
       },
       "uniqueConstraints": {}
@@ -144,9 +133,7 @@
         "specialties_name_unique": {
           "name": "specialties_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       }
     }
