@@ -9,11 +9,10 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -35,11 +34,17 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isFetchingNextPage?: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  onLoadMore,
+  hasMore,
+  isFetchingNextPage,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -48,13 +53,14 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
+  const loadMoreRef = React.useRef<HTMLDivElement>(null);
+
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
@@ -64,6 +70,31 @@ export function DataTable<TData, TValue>({
       columnVisibility,
     },
   });
+
+  // Intersection Observer for infinite scroll
+  React.useEffect(() => {
+    if (!onLoadMore || !hasMore || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, [onLoadMore, hasMore, isFetchingNextPage]);
 
   return (
     <div className="w-full">
@@ -160,23 +191,21 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
+
+      {/* Infinite scroll trigger and loading indicator */}
+      <div ref={loadMoreRef} className="flex items-center justify-center py-4">
+        {isFetchingNextPage ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading more advocates...
+          </div>
+        ) : hasMore ? (
+          <div className="text-sm text-muted-foreground">Scroll for more</div>
+        ) : (
+          <div className="text-sm text-muted-foreground">
+            No more advocates to load
+          </div>
+        )}
       </div>
     </div>
   );

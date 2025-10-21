@@ -1,24 +1,31 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Advocate } from "@/types/advocate";
 
 interface AdvocatesResponse {
   data: Advocate[];
+  nextPage?: number;
+  hasMore: boolean;
 }
 
-async function fetchAdvocates(): Promise<Advocate[]> {
-  const response = await fetch("/api/advocates");
+async function fetchAdvocates({
+  pageParam = 1,
+}: {
+  pageParam?: number;
+}): Promise<AdvocatesResponse> {
+  const response = await fetch(`/api/advocates?page=${pageParam}&limit=20`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch advocates");
   }
 
-  const json: AdvocatesResponse = await response.json();
-  return json.data;
+  return response.json();
 }
 
 export function useAdvocates() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["advocates"],
     queryFn: fetchAdvocates,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 1,
   });
 }
