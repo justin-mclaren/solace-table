@@ -79,10 +79,9 @@ export function TableSkeleton() {
         </Table>
       </div>
 
-      {/* Pagination skeleton */}
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Skeleton className="h-9 w-[80px]" />
-        <Skeleton className="h-9 w-[80px]" />
+      {/* Loading indicator skeleton */}
+      <div className="flex items-center justify-center py-4">
+        <Skeleton className="h-4 w-[150px]" />
       </div>
     </div>
   );

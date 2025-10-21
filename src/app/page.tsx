@@ -1,15 +1,29 @@
 "use client";
 
+import { useMemo } from "react";
 import { DataTable } from "@/components/modules/data-table";
 import { columns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
 import { useAdvocates } from "@/hooks/use-advocates";
 
 export default function Home() {
-  const { data: advocates, isLoading, isError, error } = useAdvocates();
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAdvocates();
+
+  // Flatten the paginated data
+  const advocates = useMemo(() => {
+    return data?.pages.flatMap((page) => page.data) || [];
+  }, [data]);
 
   return (
-    <main className="container mx-auto py-10">
+    <main className="container mx-auto pt-10">
       <h1 className="text-4xl font-bold mb-8">Solace Advocates</h1>
       {isLoading ? (
         <TableSkeleton />
@@ -18,7 +32,13 @@ export default function Home() {
           Error loading advocates: {error?.message}
         </div>
       ) : (
-        <DataTable columns={columns} data={advocates || []} />
+        <DataTable
+          columns={columns}
+          data={advocates}
+          onLoadMore={fetchNextPage}
+          hasMore={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+        />
       )}
     </main>
   );

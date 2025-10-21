@@ -12,6 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const columns: ColumnDef<Advocate>[] = [
   {
@@ -78,14 +83,28 @@ export const columns: ColumnDef<Advocate>[] = [
     header: "Specialties",
     cell: ({ row }) => {
       const specialties = row.getValue("specialties") as string[];
+      const specialtiesText = specialties.join(", ");
+
       return (
-        <div className="flex flex-col gap-1">
-          {specialties.map((specialty, index) => (
-            <div key={index} className="text-sm">
-              {specialty}
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <div
+              className="text-sm overflow-hidden whitespace-nowrap cursor-pointer"
+              style={{ textOverflow: "ellipsis" }}
+            >
+              {specialtiesText}
             </div>
-          ))}
-        </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-md">
+            <div className="flex flex-col gap-1">
+              {specialties.map((specialty, index) => (
+                <div key={index} className="text-sm">
+                  {specialty}
+                </div>
+              ))}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       );
     },
     filterFn: (row, id, value) => {
@@ -103,14 +122,17 @@ export const columns: ColumnDef<Advocate>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Years of Experience
+          Experience
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
     },
     cell: ({ row }) => {
+      const years = row.getValue("yearsOfExperience") as number;
       return (
-        <div className="text-center">{row.getValue("yearsOfExperience")}</div>
+        <div className="text-center">
+          {years} {years === 1 ? "year" : "years"}
+        </div>
       );
     },
   },
