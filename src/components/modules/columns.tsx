@@ -128,8 +128,11 @@ export const columns: ColumnDef<Advocate>[] = [
       );
     },
     cell: ({ row }) => {
+      const years = row.getValue("yearsOfExperience") as number;
       return (
-        <div className="text-center">{row.getValue("yearsOfExperience")}</div>
+        <div className="text-center">
+          {years} {years === 1 ? "year" : "years"}
+        </div>
       );
     },
   },
