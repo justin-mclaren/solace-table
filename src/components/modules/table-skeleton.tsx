@@ -11,11 +11,23 @@ import {
 export function TableSkeleton() {
   return (
     <div className="w-full">
-      {/* Filter inputs skeleton */}
-      <div className="flex items-center py-4 gap-4">
-        <Skeleton className="h-10 w-[250px]" />
-        <Skeleton className="h-10 w-[250px]" />
-        <Skeleton className="h-10 w-[120px] ml-auto" />
+      {/* Search input skeleton */}
+      <div className="mb-6">
+        <Skeleton className="h-10 w-full" />
+      </div>
+
+      {/* Filter dropdowns skeleton */}
+      <div className="flex flex-wrap gap-3 items-center mb-6">
+        <Skeleton className="h-9 w-[120px]" />
+        <Skeleton className="h-9 w-[120px]" />
+        <Skeleton className="h-9 w-[140px]" />
+        <Skeleton className="h-9 w-[130px]" />
+      </div>
+
+      {/* Count and column selector row skeleton */}
+      <div className="flex items-center justify-between py-4">
+        <Skeleton className="h-4 w-[150px]" />
+        <Skeleton className="h-9 w-[100px]" />
       </div>
 
       {/* Table skeleton */}
@@ -59,13 +71,10 @@ export function TableSkeleton() {
                   <Skeleton className="h-4 w-[80px]" />
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <Skeleton className="h-3 w-[90px]" />
-                    <Skeleton className="h-3 w-[110px]" />
-                  </div>
+                  <Skeleton className="h-4 w-[200px]" />
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-4 w-[40px] mx-auto" />
+                  <Skeleton className="h-4 w-[60px] mx-auto" />
                 </TableCell>
                 <TableCell>
                   <Skeleton className="h-4 w-[130px]" />
@@ -77,11 +86,6 @@ export function TableSkeleton() {
             ))}
           </TableBody>
         </Table>
-      </div>
-
-      {/* Loading indicator skeleton */}
-      <div className="flex items-center justify-center py-4">
-        <Skeleton className="h-4 w-[150px]" />
       </div>
     </div>
   );

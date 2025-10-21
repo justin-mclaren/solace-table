@@ -52,4 +52,4 @@ const ADVOCATE_COUNT = 10_000;
 
 const advocateData = Array.from({ length: ADVOCATE_COUNT }, generateAdvocate);
 
-export { advocateData };
+export { advocateData, specialties as specialtyList };

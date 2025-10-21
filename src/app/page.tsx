@@ -1,12 +1,42 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { DataTable } from "@/components/modules/data-table";
 import { columns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
 import { useAdvocates } from "@/hooks/use-advocates";
+import { useFilterOptions } from "@/hooks/use-filter-options";
+import {
+  AdvocateFilters,
+  AdvocateFilterState,
+} from "@/components/modules/advocate-filters";
+import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Filter state
+  const [filters, setFilters] = useState<AdvocateFilterState>({
+    cities: [],
+    degrees: [],
+    specialties: [],
+    experienceRanges: [],
+  });
+
+  // Fetch advocates with filters and search applied at the API level
   const {
     data,
     isLoading,
@@ -15,30 +45,77 @@ export default function Home() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useAdvocates();
+    totalCount,
+  } = useAdvocates({
+    search: debouncedSearch,
+    ...filters,
+  });
 
   // Flatten the paginated data
   const advocates = useMemo(() => {
     return data?.pages.flatMap((page) => page.data) || [];
   }, [data]);
 
+  // Fetch filter options from dedicated endpoint
+  const { data: filterOptions } = useFilterOptions();
+
+  const availableCities = filterOptions?.cities || [];
+  const availableDegrees = filterOptions?.degrees || [];
+  const availableSpecialties = filterOptions?.specialties || [];
+
   return (
     <main className="container mx-auto pt-10">
-      <h1 className="text-4xl font-bold mb-8">Solace Advocates</h1>
-      {isLoading ? (
-        <TableSkeleton />
-      ) : isError ? (
+      {/* <h1 className="text-4xl font-bold mb-8">Solace Advocates</h1> */}
+
+      {isError ? (
         <div className="text-center py-10 text-red-600">
           Error loading advocates: {error?.message}
         </div>
+      ) : isLoading && !data ? (
+        <TableSkeleton />
       ) : (
-        <DataTable
-          columns={columns}
-          data={advocates}
-          onLoadMore={fetchNextPage}
-          hasMore={hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-        />
+        <>
+          {/* Search Input */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              placeholder="Search advocates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Filters */}
+          <AdvocateFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            availableCities={availableCities}
+            availableDegrees={availableDegrees}
+            availableSpecialties={availableSpecialties}
+            className="mb-6"
+          />
+
+          {/* Data Table */}
+          <DataTable
+            columns={columns}
+            data={advocates}
+            onLoadMore={fetchNextPage}
+            hasMore={hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            totalCount={totalCount}
+          />
+        </>
       )}
     </main>
   );
