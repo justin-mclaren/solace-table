@@ -12,6 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const columns: ColumnDef<Advocate>[] = [
   {
@@ -78,13 +83,28 @@ export const columns: ColumnDef<Advocate>[] = [
     header: "Specialties",
     cell: ({ row }) => {
       const specialties = row.getValue("specialties") as string[];
+      const specialtiesText = specialties.join(", ");
+
       return (
-        <div
-          className="text-sm overflow-hidden whitespace-nowrap"
-          style={{ textOverflow: "ellipsis" }}
-        >
-          {specialties.join(", ")}
-        </div>
+        <Tooltip delayDuration={300}>
+          <TooltipTrigger asChild>
+            <div
+              className="text-sm overflow-hidden whitespace-nowrap cursor-pointer"
+              style={{ textOverflow: "ellipsis" }}
+            >
+              {specialtiesText}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-md">
+            <div className="flex flex-col gap-1">
+              {specialties.map((specialty, index) => (
+                <div key={index} className="text-sm">
+                  {specialty}
+                </div>
+              ))}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       );
     },
     filterFn: (row, id, value) => {
