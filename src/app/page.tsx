@@ -16,10 +16,13 @@ export default function Home() {
     });
   }, []);
 
-  const onChange = (e) => {
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
 
-    document.getElementById("search-term").innerHTML = searchTerm;
+    const searchTermElement = document.getElementById("search-term");
+    if (searchTermElement) {
+      searchTermElement.textContent = searchTerm;
+    }
 
     console.log("filtering advocates...");
     const filteredAdvocates = advocates.filter((advocate) => {
