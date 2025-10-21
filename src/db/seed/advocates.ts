@@ -49,7 +49,6 @@ const generateAdvocate = () => ({
   phoneNumber: parseInt(faker.string.numeric(10)),
 });
 
-// Generate 500 advocates (configurable)
 const ADVOCATE_COUNT = 500;
 
 const advocateData = Array.from({ length: ADVOCATE_COUNT }, generateAdvocate);
