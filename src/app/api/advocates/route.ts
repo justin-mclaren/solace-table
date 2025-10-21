@@ -1,6 +1,7 @@
 import db from "@/db";
 import { advocates } from "@/db/schema";
 import { Advocate } from "@/types/advocate";
+import { sql } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,9 +16,12 @@ export async function GET(request: Request) {
     .limit(limit)
     .offset(offset);
 
-  // Get total count for hasMore calculation
-  const total = await db.select().from(advocates);
-  const hasMore = offset + data.length < total.length;
+  // Get total count for hasMore calculation using efficient COUNT query
+  const countResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(advocates);
+  const totalCount = Number(countResult[0].count);
+  const hasMore = offset + data.length < totalCount;
 
   return Response.json({
     data,
