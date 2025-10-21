@@ -33,6 +33,7 @@ interface MultiSelectPopoverProps {
   selectedValues: string[];
   onSelectedValuesChange: (values: string[]) => void;
   searchPlaceholder?: string;
+  showSearch?: boolean;
 }
 
 function MultiSelectPopover({
@@ -41,6 +42,7 @@ function MultiSelectPopover({
   selectedValues,
   onSelectedValuesChange,
   searchPlaceholder = "Search...",
+  showSearch = true,
 }: MultiSelectPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,10 +52,12 @@ function MultiSelectPopover({
     typeof opt === "string" ? { value: opt, label: opt } : opt
   );
 
-  // Filter by label
-  const filteredOptions = normalizedOptions.filter((option) =>
-    option.label.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter by label (only if search is enabled)
+  const filteredOptions = showSearch
+    ? normalizedOptions.filter((option) =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : normalizedOptions;
 
   const handleToggle = (value: string) => {
     const isSelected = selectedValues.includes(value);
@@ -104,14 +108,16 @@ function MultiSelectPopover({
       </PopoverTrigger>
       <PopoverContent className="w-[280px] p-0" align="start">
         {/* Search */}
-        <div className="p-3 border-b">
-          <Input
-            placeholder={searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8"
-          />
-        </div>
+        {showSearch && (
+          <div className="p-3 border-b">
+            <Input
+              placeholder={searchPlaceholder}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-8"
+            />
+          </div>
+        )}
 
         {/* Selected count and clear */}
         {selectedValues.length > 0 && (
@@ -222,7 +228,7 @@ export function AdvocateFilters({
           options={availableDegrees}
           selectedValues={filters.degrees}
           onSelectedValuesChange={(values) => updateFilter("degrees", values)}
-          searchPlaceholder="Search degrees..."
+          showSearch={false}
         />
 
         {/* Specialties Filter */}
@@ -244,7 +250,7 @@ export function AdvocateFilters({
           onSelectedValuesChange={(values) =>
             updateFilter("experienceRanges", values)
           }
-          searchPlaceholder="Search ranges..."
+          showSearch={false}
         />
 
         {/* Clear Filters Button */}
