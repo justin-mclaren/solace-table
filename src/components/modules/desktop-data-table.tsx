@@ -22,7 +22,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -34,7 +33,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-interface DataTableProps<TData, TValue> {
+interface DesktopDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onLoadMore?: () => void;
@@ -58,14 +57,14 @@ const COLUMN_STYLES = {
   6: { flex: "0.5 0 0", minWidth: "60px" }, // Actions - smallest
 } as const;
 
-export function DataTable<TData, TValue>({
+export function DesktopDataTable<TData, TValue>({
   columns,
   data,
   onLoadMore,
   hasMore,
   isFetchingNextPage,
   totalCount = 0,
-}: DataTableProps<TData, TValue>) {
+}: DesktopDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -101,7 +100,7 @@ export function DataTable<TData, TValue>({
     count: totalRows,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => 53, // Approximate row height in pixels
-    overscan: 10, // Render 10 extra rows above and below viewport
+    overscan: 5, // Keep low for optimal performance - only 5 extra rows above/below viewport
   });
 
   // Infinite scroll based on scroll position
@@ -112,8 +111,9 @@ export function DataTable<TData, TValue>({
 
     if (!lastItem) return;
 
+    // Trigger infinite scroll when within last 5 rows for smoother loading
     if (
-      lastItem.index >= rows.length - 1 &&
+      lastItem.index >= rows.length - 5 &&
       hasMore &&
       !isFetchingNextPage &&
       onLoadMore
@@ -156,10 +156,11 @@ export function DataTable<TData, TValue>({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
         <div
           ref={tableContainerRef}
           className="rounded-md border bg-white"
-          style={{ height: "calc(100vh - 250px)", overflow: "auto" }}
+          style={{ height: "calc(100vh - 350px)", overflow: "auto" }}
         >
           {/* Sticky Header */}
           <div className="sticky top-0 z-10 border-b bg-white">

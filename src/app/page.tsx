@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { DataTable } from "@/components/modules/data-table";
+import { DesktopDataTable } from "@/components/modules/desktop-data-table";
+import { MobileDataTable } from "@/components/modules/mobile-data-table";
 import { columns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
 import { useAdvocates } from "@/hooks/use-advocates";
 import { useFilterOptions } from "@/hooks/use-filter-options";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import {
   AdvocateFilters,
   AdvocateFilterState,
@@ -16,6 +18,7 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const isMobile = useIsMobile();
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -123,15 +126,26 @@ export default function Home() {
               />
             </div>
 
-            {/* Data Table */}
-            <DataTable
-              columns={columns}
-              data={advocates}
-              onLoadMore={fetchNextPage}
-              hasMore={hasNextPage}
-              isFetchingNextPage={isFetchingNextPage}
-              totalCount={totalCount}
-            />
+            {/* Conditionally render only one table based on viewport */}
+            {isMobile ? (
+              <MobileDataTable<(typeof advocates)[number], unknown>
+                columns={columns as any}
+                data={advocates}
+                onLoadMore={fetchNextPage}
+                hasMore={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                totalCount={totalCount}
+              />
+            ) : (
+              <DesktopDataTable
+                columns={columns}
+                data={advocates}
+                onLoadMore={fetchNextPage}
+                hasMore={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                totalCount={totalCount}
+              />
+            )}
           </>
         )}
       </div>

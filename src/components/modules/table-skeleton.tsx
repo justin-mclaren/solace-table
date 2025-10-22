@@ -35,8 +35,44 @@ export function TableSkeleton() {
         <Skeleton className="h-9 w-[100px]" />
       </div>
 
-      {/* Table skeleton */}
-      <div className="rounded-md border bg-white">
+      {/* Mobile Card Skeletons */}
+      <div className="md:hidden space-y-3 px-4">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="bg-white rounded-lg border p-4 space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <Skeleton className="h-8 w-8" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+            <div className="space-y-1">
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop Table skeleton */}
+      <div className="hidden md:block rounded-md border bg-white">
         <Table>
           <TableHeader>
             <TableRow>
