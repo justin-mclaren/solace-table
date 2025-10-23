@@ -2,6 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { Advocate } from "@/types/advocate";
 import { Button } from "@/components/ui/button";
 import {
@@ -182,9 +183,10 @@ export const columns: ColumnDef<Advocate>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() =>
-                navigator.clipboard.writeText(advocate.id.toString())
-              }
+              onClick={() => {
+                navigator.clipboard.writeText(advocate.id.toString());
+                toast.success("Advocate ID copied to clipboard");
+              }}
             >
               Copy advocate ID
             </DropdownMenuItem>
