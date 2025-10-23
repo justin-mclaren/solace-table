@@ -192,7 +192,13 @@ export const columns: ColumnDef<Advocate>[] = [
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>View details</DropdownMenuItem>
-            <DropdownMenuItem>Contact advocate</DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                window.location.href = `tel:${advocate.phoneNumber}`;
+              }}
+            >
+              Contact advocate
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
