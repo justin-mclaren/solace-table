@@ -27,6 +27,7 @@ export const columns: ColumnDef<Advocate>[] = [
       return (
         <Button
           variant="ghost"
+          className="h-10 px-0"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Name
@@ -63,6 +64,7 @@ export const columns: ColumnDef<Advocate>[] = [
       return (
         <Button
           variant="ghost"
+          className="h-10 px-0"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           City
@@ -78,6 +80,7 @@ export const columns: ColumnDef<Advocate>[] = [
       return (
         <Button
           variant="ghost"
+          className="h-10 px-0"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Degree
@@ -89,7 +92,9 @@ export const columns: ColumnDef<Advocate>[] = [
   },
   {
     accessorKey: "specialties",
-    header: "Specialties",
+    header: () => {
+      return <div className="flex items-center h-10">Specialties</div>;
+    },
     cell: ({ row }) => {
       const specialties = row.getValue("specialties") as string[];
       const specialtiesText = specialties.join(", ");
@@ -129,6 +134,7 @@ export const columns: ColumnDef<Advocate>[] = [
       return (
         <Button
           variant="ghost"
+          className="h-10 px-0"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
           Experience
@@ -147,7 +153,9 @@ export const columns: ColumnDef<Advocate>[] = [
   },
   {
     accessorKey: "phoneNumber",
-    header: "Phone Number",
+    header: () => {
+      return <div className="flex items-center h-10">Phone Number</div>;
+    },
     cell: ({ row }) => {
       const phoneNumber = row.getValue("phoneNumber") as number;
       // Format phone number (assuming US format)
