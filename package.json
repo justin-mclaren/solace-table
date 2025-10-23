@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate": "drizzle-kit generate",
@@ -40,6 +40,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
     "@faker-js/faker": "^10.1.0",
     "@types/node": "^20.14.12",
     "@types/react": "^19.2.2",
