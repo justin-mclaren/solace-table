@@ -4,14 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm migrate:up && next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate": "drizzle-kit generate",
     "migrate:up": "node ./src/db/migrate.js",
-    "seed": "node --loader esbuild-register/loader -r esbuild-register ./src/db/seed/index.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -45,6 +44,7 @@
     "@types/node": "^20.14.12",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "dotenv": "^17.2.3",
     "drizzle-kit": "^0.23.0",
     "eslint": "^9.38.0",
     "eslint-config-next": "16.0.0",

@@ -7,7 +7,15 @@ interface FilterOptions {
 }
 
 async function fetchFilterOptions(): Promise<FilterOptions> {
-  const response = await fetch("/api/advocates/filters");
+  const response = await fetch("/api/advocates/filters", {
+    // ✅ AGGRESSIVE NEXT.JS CACHING: Cache forever (filter options are read-only)
+    next: {
+      revalidate: false, // Never auto-revalidate (cache indefinitely)
+      tags: ["filter-options"], // For future cache invalidation
+    },
+    // 🔮 FUTURE: When filter options can change:
+    // next: { revalidate: 3600, tags: ["filter-options"] } // Cache for 1 hour
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch filter options");
