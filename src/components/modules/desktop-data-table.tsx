@@ -125,7 +125,7 @@ export function DesktopDataTable<TData, TValue>({
     count: totalRows,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => 53, // Approximate row height in pixels
-    overscan: 8,
+    overscan: 15,
   });
 
   // Infinite scroll with IntersectionObserver (better than scroll detection)
@@ -143,7 +143,7 @@ export function DesktopDataTable<TData, TValue>({
       },
       {
         root: tableContainerRef.current,
-        rootMargin: "600px", // Start loading 200px before sentinel visible
+        rootMargin: "800px", // Start loading 800px before sentinel visible
         threshold: 0.1,
       }
     );
