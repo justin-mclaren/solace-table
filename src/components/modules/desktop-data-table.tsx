@@ -75,6 +75,7 @@ export function DesktopDataTable<TData, TValue>({
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  const loadMoreRef = React.useRef<HTMLDivElement>(null);
 
   const handleViewDetails = React.useCallback((advocate: Advocate) => {
     setSelectedAdvocate(advocate);
@@ -97,8 +98,19 @@ export function DesktopDataTable<TData, TValue>({
     state: {
       columnVisibility,
     },
-    manualSorting: true, // Sorting handled server-side
-    manualFiltering: true, // Filtering handled server-side
+    // Server-side features
+    manualSorting: true,
+    manualFiltering: true,
+    manualPagination: true, // Using custom infinite scroll
+    // Explicitly disable unused features for performance
+    enableRowSelection: false,
+    enableMultiRowSelection: false,
+    enableSubRowSelection: false,
+    enableGrouping: false,
+    enableExpanding: false,
+    enableColumnPinning: false,
+    enableRowPinning: false,
+    enableGlobalFilter: false, // Using server-side search
   });
 
   const { rows } = table.getRowModel();
