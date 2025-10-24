@@ -144,8 +144,8 @@ export const createColumns = (
       return <div className="flex items-center h-10">Specialties</div>;
     },
     cell: ({ row }) => {
-      const specialties = row.getValue("specialties") as string[];
-      const specialtiesText = specialties.join(", ");
+      const advocate = row.original;
+      const specialtiesText = advocate.specialties.join(", ");
 
       return (
         <Tooltip delayDuration={300}>
@@ -159,7 +159,7 @@ export const createColumns = (
           </TooltipTrigger>
           <TooltipContent className="max-w-md">
             <div className="flex flex-col gap-1">
-              {specialties.map((specialty, index) => (
+              {advocate.specialties.map((specialty, index) => (
                 <div key={index} className="text-sm">
                   {specialty}
                 </div>
