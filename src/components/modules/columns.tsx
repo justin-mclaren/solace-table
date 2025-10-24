@@ -1,7 +1,13 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+  MoreHorizontal,
+} from "lucide-react";
+import { toast } from "sonner";
 import { Advocate } from "@/types/advocate";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,47 +23,85 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Avvvatars from "avvvatars-react";
 
-export const columns: ColumnDef<Advocate>[] = [
+export const createColumns = (
+  onViewDetails: (advocate: Advocate) => void,
+  onSort?: (sort: { sortBy: string; sortOrder: "asc" | "desc" }) => void,
+  sortState?: { sortBy: string; sortOrder: "asc" | "desc" }
+): ColumnDef<Advocate>[] => [
   {
     id: "name",
     accessorKey: "lastName",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "lastName";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-10 px-0"
+          onClick={() =>
+            onSort?.({
+              sortBy: "lastName",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
     cell: ({ row }) => {
       const advocate = row.original;
       return (
-        <div className="font-medium">
-          {advocate.firstName} {advocate.lastName}
+        <div className="flex items-center gap-3">
+          <Avvvatars
+            value={`${advocate.firstName} ${advocate.lastName}`}
+            displayValue={advocate.initials}
+            size={32}
+          />
+          <span className="font-medium">
+            {advocate.firstName} {advocate.lastName}
+          </span>
         </div>
       );
-    },
-    filterFn: (row, id, value) => {
-      const advocate = row.original;
-      const fullName =
-        `${advocate.firstName} ${advocate.lastName}`.toLowerCase();
-      return fullName.includes(value.toLowerCase());
     },
   },
   {
     accessorKey: "city",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "city";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-10 px-0"
+          onClick={() =>
+            onSort?.({
+              sortBy: "city",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           City
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
@@ -65,14 +109,30 @@ export const columns: ColumnDef<Advocate>[] = [
   },
   {
     accessorKey: "degree",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "degree";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-10 px-0"
+          onClick={() =>
+            onSort?.({
+              sortBy: "degree",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           Degree
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
@@ -80,10 +140,12 @@ export const columns: ColumnDef<Advocate>[] = [
   },
   {
     accessorKey: "specialties",
-    header: "Specialties",
+    header: () => {
+      return <div className="flex items-center h-10">Specialties</div>;
+    },
     cell: ({ row }) => {
-      const specialties = row.getValue("specialties") as string[];
-      const specialtiesText = specialties.join(", ");
+      const advocate = row.original;
+      const specialtiesText = advocate.specialties.join(", ");
 
       return (
         <Tooltip delayDuration={300}>
@@ -97,7 +159,7 @@ export const columns: ColumnDef<Advocate>[] = [
           </TooltipTrigger>
           <TooltipContent className="max-w-md">
             <div className="flex flex-col gap-1">
-              {specialties.map((specialty, index) => (
+              {advocate.specialties.map((specialty, index) => (
                 <div key={index} className="text-sm">
                   {specialty}
                 </div>
@@ -107,30 +169,40 @@ export const columns: ColumnDef<Advocate>[] = [
         </Tooltip>
       );
     },
-    filterFn: (row, id, value) => {
-      const specialties = row.getValue(id) as string[];
-      return specialties.some((specialty) =>
-        specialty.toLowerCase().includes(value.toLowerCase())
-      );
-    },
   },
   {
     accessorKey: "yearsOfExperience",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "yearsOfExperience";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="h-10 px-0"
+          onClick={() =>
+            onSort?.({
+              sortBy: "yearsOfExperience",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           Experience
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
     cell: ({ row }) => {
       const years = row.getValue("yearsOfExperience") as number;
       return (
-        <div className="text-center">
+        <div className="md:text-center text-left">
           {years} {years === 1 ? "year" : "years"}
         </div>
       );
@@ -138,14 +210,12 @@ export const columns: ColumnDef<Advocate>[] = [
   },
   {
     accessorKey: "phoneNumber",
-    header: "Phone Number",
+    header: () => {
+      return <div className="flex items-center h-10">Phone Number</div>;
+    },
     cell: ({ row }) => {
-      const phoneNumber = row.getValue("phoneNumber") as number;
-      // Format phone number (assuming US format)
-      const formatted = phoneNumber
-        .toString()
-        .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-      return <div className="font-mono">{formatted}</div>;
+      const advocate = row.original;
+      return <div className="font-mono">{advocate.formattedPhoneNumber}</div>;
     },
   },
   {
@@ -165,15 +235,24 @@ export const columns: ColumnDef<Advocate>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() =>
-                navigator.clipboard.writeText(advocate.id.toString())
-              }
+              onClick={() => {
+                navigator.clipboard.writeText(advocate.id.toString());
+                toast.success("Advocate ID copied to clipboard");
+              }}
             >
               Copy advocate ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View details</DropdownMenuItem>
-            <DropdownMenuItem>Contact advocate</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewDetails(advocate)}>
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                window.location.href = `tel:${advocate.phoneNumber}`;
+              }}
+            >
+              Contact advocate
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

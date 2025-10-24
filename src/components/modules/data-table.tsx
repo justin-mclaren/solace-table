@@ -3,13 +3,9 @@
 import * as React from "react";
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -22,7 +18,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -33,6 +28,8 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AdvocateDetailsDialog } from "./advocate-details-dialog";
+import { Advocate } from "@/types/advocate";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -41,93 +38,183 @@ interface DataTableProps<TData, TValue> {
   hasMore?: boolean;
   isFetchingNextPage?: boolean;
   totalCount?: number;
+  onSort?: (sort: { sortBy: string; sortOrder: "asc" | "desc" }) => void;
+  sortState?: { sortBy: string; sortOrder: "asc" | "desc" };
 }
 
 // Shared column styles for consistent header and body alignment
-const COLUMN_STYLES = {
-  0: { flex: "2 1 0", minWidth: "150px" }, // Name - wider
-  1: { flex: "1.5 1 0", minWidth: "120px" }, // City
-  2: { flex: "0.8 1 0", minWidth: "80px" }, // Degree - smaller
-  3: {
+// Keyed by column ID to handle column visibility correctly
+const COLUMN_STYLES: Record<string, React.CSSProperties> = {
+  name: { flex: "2 1 0", minWidth: "150px" }, // Name - wider
+  city: { flex: "1.5 1 0", minWidth: "120px" }, // City
+  degree: { flex: "0.8 1 0", minWidth: "80px" }, // Degree - smaller
+  specialties: {
     flex: "3 1 0",
     minWidth: "200px",
     maxWidth: "500px",
   }, // Specialties - most flexible
-  4: { flex: "1 1 0", minWidth: "100px" }, // Experience - smaller
-  5: { flex: "1.5 1 0", minWidth: "140px" }, // Phone Number
-  6: { flex: "0.5 0 0", minWidth: "60px" }, // Actions - smallest
-} as const;
+  yearsOfExperience: { flex: "1 1 0", minWidth: "100px" }, // Experience - smaller
+  phoneNumber: { flex: "1.5 1 0", minWidth: "140px" }, // Phone Number
+  actions: { flex: "0.5 0 0", minWidth: "60px" }, // Actions - smallest
+};
+
+// Mobile labels - reused across all cells to avoid recreation
+const MOBILE_LABELS: Record<string, string> = {
+  name: "Name",
+  city: "City",
+  degree: "Degree",
+  specialties: "Specialties",
+  yearsOfExperience: "Years of Experience",
+  phoneNumber: "Phone Number",
+  actions: "",
+};
 
 export function DataTable<TData, TValue>({
-  columns,
+  columns: baseColumns,
   data,
   onLoadMore,
   hasMore,
   isFetchingNextPage,
   totalCount = 0,
+  onSort,
+  sortState,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [selectedAdvocate, setSelectedAdvocate] =
+    React.useState<Advocate | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
+  const loadMoreRef = React.useRef<HTMLDivElement>(null);
+
+  // Track mobile/desktop breakpoint for dynamic row heights
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkMobile();
+
+    // Debounce resize handler - only update after user stops resizing (300ms delay)
+    // Prevents expensive remeasures during continuous resize drag
+    let resizeTimer: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(checkMobile, 300);
+    };
+
+    // Listen for resize
+    window.addEventListener("resize", debouncedResize);
+    return () => {
+      window.removeEventListener("resize", debouncedResize);
+      clearTimeout(resizeTimer);
+    };
+  }, []);
+
+  const handleViewDetails = React.useCallback((advocate: Advocate) => {
+    setSelectedAdvocate(advocate);
+    setDialogOpen(true);
+  }, []);
+
+  const columns = React.useMemo(() => {
+    // Check if columns is a function (factory) or array
+    if (typeof baseColumns === "function") {
+      return (baseColumns as any)(handleViewDetails, onSort, sortState);
+    }
+    return baseColumns;
+  }, [baseColumns, handleViewDetails, onSort, sortState]);
 
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    // CRITICAL: Use stable row IDs from database to prevent re-renders on page append
+    getRowId: (row) => String((row as any).id),
     onColumnVisibilityChange: setColumnVisibility,
     state: {
-      sorting,
-      columnFilters,
       columnVisibility,
     },
+    // Server-side features
+    manualSorting: true,
+    manualFiltering: true,
+    manualPagination: true, // Using custom infinite scroll
+    // Explicitly disable unused features for performance
+    enableRowSelection: false,
+    enableMultiRowSelection: false,
+    enableSubRowSelection: false,
+    enableGrouping: false,
+    enableExpanding: false,
+    enableColumnPinning: false,
+    enableRowPinning: false,
+    enableGlobalFilter: false, // Using server-side search
   });
 
   const { rows } = table.getRowModel();
 
-  // Add skeleton rows count
-  const totalRows = rows.length + (isFetchingNextPage ? 5 : 0);
+  const skeletonCount = isMobile ? 3 : 8; // Fewer on mobile (tall cards), moderate on desktop
+  const totalRows = rows.length + (isFetchingNextPage ? skeletonCount : 0);
 
-  // Virtualizer
+  // Virtualizer - dynamic row height for mobile/desktop
   const rowVirtualizer = useVirtualizer({
     count: totalRows,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 53, // Approximate row height in pixels
-    overscan: 10, // Render 10 extra rows above and below viewport
+    estimateSize: React.useCallback(() => {
+      // Mobile: ~400px for stacked layout (more height for all fields), Desktop: 53px for row
+      return isMobile ? 400 : 53;
+    }, [isMobile]),
+    overscan: 10,
   });
 
-  // Infinite scroll based on scroll position
+  // Force virtualizer to remeasure when switching between mobile/desktop
+  // CRITICAL: Use ref to avoid dependency on rowVirtualizer instance
+  const virtualizerRef = React.useRef(rowVirtualizer);
+  virtualizerRef.current = rowVirtualizer;
+
+  React.useEffect(() => {
+    virtualizerRef.current.measure();
+  }, [isMobile]);
+
   const virtualItems = rowVirtualizer.getVirtualItems();
 
   React.useEffect(() => {
-    const [lastItem] = [...virtualItems].reverse();
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || !hasMore || isFetchingNextPage || !onLoadMore) return;
 
-    if (!lastItem) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      {
+        root: tableContainerRef.current,
+        rootMargin: "700px",
+        threshold: 0.1,
+      }
+    );
 
-    if (
-      lastItem.index >= rows.length - 1 &&
-      hasMore &&
-      !isFetchingNextPage &&
-      onLoadMore
-    ) {
-      onLoadMore();
-    }
-  }, [hasMore, isFetchingNextPage, onLoadMore, rows.length, virtualItems]);
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isFetchingNextPage, onLoadMore]);
 
   return (
     <TooltipProvider>
       <div className="w-full">
-        <div className="flex items-center justify-between py-4">
+        <AdvocateDetailsDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          advocate={selectedAdvocate}
+        />
+        <div className="flex items-center justify-between py-4 px-4 md:px-0">
           <div className="text-sm text-muted-foreground">
-            {totalCount} advocates found
+            {totalCount.toLocaleString()}{" "}
+            {totalCount === 1 ? "advocate" : "advocates"} found
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -156,18 +243,14 @@ export function DataTable<TData, TValue>({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
         <div
           ref={tableContainerRef}
-          className="rounded-md border"
-          style={{ height: "calc(100vh - 250px)", overflow: "auto" }}
+          className="rounded-md md:border border-0 md:bg-white bg-transparent pl-4 md:px-0"
+          style={{ height: "calc(100vh - 350px)", overflow: "auto" }}
         >
-          {/* Sticky Header */}
-          <div
-            className="sticky top-0 z-10 border-b"
-            style={{
-              backgroundColor: "hsl(var(--background))",
-            }}
-          >
+          {/* Sticky Header - hidden on mobile */}
+          <div className="sticky top-0 z-10 border-b bg-white md:block hidden">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -178,9 +261,8 @@ export function DataTable<TData, TValue>({
                       width: "100%",
                     }}
                   >
-                    {headerGroup.headers.map((header, index) => {
-                      const style =
-                        COLUMN_STYLES[index as keyof typeof COLUMN_STYLES];
+                    {headerGroup.headers.map((header) => {
+                      const style = COLUMN_STYLES[header.column.id];
 
                       return (
                         <TableHead key={header.id} style={style}>
@@ -226,6 +308,7 @@ export function DataTable<TData, TValue>({
                       return (
                         <TableRow
                           key={`skeleton-${virtualRow.index}`}
+                          className="md:flex-row flex-col md:gap-0 gap-2 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-4 md:mx-0 md:p-0 p-4"
                           style={{
                             position: "absolute",
                             top: 0,
@@ -235,27 +318,55 @@ export function DataTable<TData, TValue>({
                             transform: `translateY(${virtualRow.start}px)`,
                             display: "flex",
                             alignItems: "center",
+                            // Performance: Isolate layout calculations
+                            contain: "layout style paint",
+                            // Performance: Hint browser about transform animations
+                            willChange: "transform",
                           }}
                         >
-                          <TableCell style={COLUMN_STYLES[0]}>
-                            <Skeleton className="h-4 w-[120px]" />
+                          <TableCell
+                            style={COLUMN_STYLES.name}
+                            className="md:border-0 border-0"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Skeleton className="h-8 w-8 rounded-full" />
+                              <Skeleton className="h-4 w-[120px]" />
+                            </div>
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES[1]}>
+                          <TableCell
+                            style={COLUMN_STYLES.city}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[100px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES[2]}>
+                          <TableCell
+                            style={COLUMN_STYLES.degree}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[80px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES[3]}>
+                          <TableCell
+                            style={COLUMN_STYLES.specialties}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[200px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES[4]}>
+                          <TableCell
+                            style={COLUMN_STYLES.yearsOfExperience}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[40px] mx-auto" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES[5]}>
+                          <TableCell
+                            style={COLUMN_STYLES.phoneNumber}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[130px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES[6]}>
+                          <TableCell
+                            style={COLUMN_STYLES.actions}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-8 w-8" />
                           </TableCell>
                         </TableRow>
@@ -266,6 +377,7 @@ export function DataTable<TData, TValue>({
                     return (
                       <TableRow
                         key={row.id}
+                        className="md:flex md:flex-row md:gap-0 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-4 md:mx-0 md:p-0 p-4 md:bg-transparent bg-white md:shadow-none shadow-sm"
                         style={{
                           position: "absolute",
                           top: 0,
@@ -273,20 +385,75 @@ export function DataTable<TData, TValue>({
                           width: "100%",
                           height: `${virtualRow.size}px`,
                           transform: `translateY(${virtualRow.start}px)`,
-                          display: "flex",
-                          alignItems: "center",
+                          // Mobile: CSS Grid, Desktop: Flexbox
+                          display: isMobile ? "grid" : "flex",
+                          gridTemplateColumns: isMobile
+                            ? "1fr auto"
+                            : undefined,
+                          gridTemplateRows: isMobile
+                            ? "auto repeat(5, auto)"
+                            : undefined,
+                          alignItems: isMobile ? "stretch" : "center",
+                          // Performance: Isolate layout calculations
+                          contain: "layout style paint",
+                          // Performance: Hint browser about transform animations
+                          willChange: "transform",
                         }}
                       >
-                        {row.getVisibleCells().map((cell, index) => {
-                          const style =
-                            COLUMN_STYLES[index as keyof typeof COLUMN_STYLES];
+                        {row.getVisibleCells().map((cell, cellIndex) => {
+                          const style = COLUMN_STYLES[cell.column.id];
+                          const columnId = cell.column.id;
+                          const mobileLabel = MOBILE_LABELS[columnId];
+                          const isNameCell = columnId === "name";
+                          const isActionsCell = columnId === "actions";
 
                           return (
-                            <TableCell key={cell.id} style={style}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
+                            <TableCell
+                              key={cell.id}
+                              style={{
+                                // Desktop: Use COLUMN_STYLES
+                                // Mobile: Grid positioning
+                                ...(!isMobile
+                                  ? style
+                                  : {
+                                      width: "100%",
+                                      flex: "none",
+                                      display: "block",
+                                      // Grid positioning on mobile
+                                      gridColumn: isActionsCell
+                                        ? "2"
+                                        : isNameCell
+                                          ? "1"
+                                          : "1 / -1",
+                                      gridRow: isActionsCell
+                                        ? "1"
+                                        : isNameCell
+                                          ? "1"
+                                          : "auto",
+                                    }),
+                              }}
+                              className="md:border-0 border-0 md:p-4 p-0 md:py-0 py-2 first:pt-0 last:pb-0"
+                              data-label={mobileLabel}
+                            >
+                              {/* Mobile: Show label (except for actions which is in top right) */}
+                              {mobileLabel && !isActionsCell && (
+                                <div className="md:hidden text-xs text-muted-foreground font-medium mb-1 uppercase tracking-wide">
+                                  {mobileLabel}
+                                </div>
                               )}
+                              {/* Content */}
+                              <div
+                                className={
+                                  isActionsCell
+                                    ? "md:contents flex justify-end"
+                                    : "md:contents"
+                                }
+                              >
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </div>
                             </TableCell>
                           );
                         })}
@@ -297,6 +464,15 @@ export function DataTable<TData, TValue>({
               )}
             </TableBody>
           </Table>
+
+          {/* Intersection Observer sentinel for infinite scroll */}
+          {hasMore && (
+            <div
+              ref={loadMoreRef}
+              style={{ height: "20px", visibility: "hidden" }}
+              aria-hidden="true"
+            />
+          )}
 
           {/* End of list indicator */}
           {!isFetchingNextPage && !hasMore && rows.length > 0 && (

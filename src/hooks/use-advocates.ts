@@ -15,6 +15,8 @@ export interface AdvocateFilters {
   degrees: string[];
   specialties: string[];
   experienceRanges: string[];
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 async function fetchAdvocates({
@@ -48,6 +50,14 @@ async function fetchAdvocates({
     params.append("experienceRanges", filters.experienceRanges.join(","));
   }
 
+  // Add sort parameters
+  if (filters.sortBy) {
+    params.append("sortBy", filters.sortBy);
+  }
+  if (filters.sortOrder) {
+    params.append("sortOrder", filters.sortOrder);
+  }
+
   const response = await fetch(`/api/advocates?${params.toString()}`);
 
   if (!response.ok) {
@@ -64,6 +74,8 @@ export function useAdvocates(
     degrees: [],
     specialties: [],
     experienceRanges: [],
+    sortBy: "lastName",
+    sortOrder: "asc",
   }
 ) {
   const query = useInfiniteQuery({

@@ -1,6 +1,17 @@
 import db from "@/db";
 import { advocates, specialties, advocateSpecialties } from "@/db/schema";
-import { sql, and, inArray, or, gte, lte, eq, ilike } from "drizzle-orm";
+import {
+  sql,
+  and,
+  inArray,
+  or,
+  gte,
+  lte,
+  eq,
+  ilike,
+  asc,
+  desc,
+} from "drizzle-orm";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,6 +26,22 @@ export async function GET(request: Request) {
     searchParams.get("specialties")?.split(",").filter(Boolean) || [];
   const experienceRanges =
     searchParams.get("experienceRanges")?.split(",").filter(Boolean) || [];
+
+  // Get sort parameters
+  const sortBy = searchParams.get("sortBy") || "lastName";
+  const sortOrder = searchParams.get("sortOrder") || "asc";
+
+  // Validate sortBy to prevent invalid field access
+  const validSortFields = [
+    "lastName",
+    "firstName",
+    "city",
+    "degree",
+    "yearsOfExperience",
+  ] as const;
+  const sortField = validSortFields.includes(sortBy as any)
+    ? sortBy
+    : "lastName";
 
   const offset = (page - 1) * limit;
 
@@ -107,7 +134,7 @@ export async function GET(request: Request) {
   const whereClause =
     advocateConditions.length > 0 ? and(...advocateConditions) : undefined;
 
-  // Fetch filtered advocates with aggregated specialties
+  // Fetch filtered advocates with aggregated specialties and computed fields
   const advocatesResult = await db
     .select({
       id: advocates.id,
@@ -122,6 +149,9 @@ export async function GET(request: Request) {
         ARRAY_AGG(${specialties.name} ORDER BY ${specialties.name}) FILTER (WHERE ${specialties.name} IS NOT NULL),
         ARRAY[]::text[]
       )`,
+      // Computed fields - calculate once on server
+      initials: sql<string>`UPPER(SUBSTRING(${advocates.firstName}, 1, 1) || SUBSTRING(${advocates.lastName}, 1, 1))`,
+      formattedPhoneNumber: sql<string>`CONCAT('(', SUBSTRING(${advocates.phoneNumber}::text, 1, 3), ') ', SUBSTRING(${advocates.phoneNumber}::text, 4, 3), '-', SUBSTRING(${advocates.phoneNumber}::text, 7, 4))`,
     })
     .from(advocates)
     .leftJoin(
@@ -131,22 +161,56 @@ export async function GET(request: Request) {
     .leftJoin(specialties, eq(advocateSpecialties.specialtyId, specialties.id))
     .where(whereClause)
     .groupBy(advocates.id)
+    .orderBy(
+      // Map sortField to corresponding column - cleaner than nested ternaries
+      (() => {
+        const sortColumns: Record<string, any> = {
+          lastName: advocates.lastName,
+          firstName: advocates.firstName,
+          city: advocates.city,
+          degree: advocates.degree,
+          yearsOfExperience: advocates.yearsOfExperience,
+        };
+        const column = sortColumns[sortField] || advocates.lastName;
+        return sortOrder === "desc" ? desc(column) : asc(column);
+      })(),
+      // CRITICAL: Secondary sort by ID for deterministic pagination
+      // Without this, advocates with same lastName/city/etc. can appear in different order
+      // across requests, causing duplicates and missing records across pages
+      asc(advocates.id)
+    )
     .limit(limit)
     .offset(offset);
 
-  // Get total count with filters applied
-  const countResult = await db
-    .select({ count: sql<number>`count(DISTINCT ${advocates.id})` })
-    .from(advocates)
-    .leftJoin(
-      advocateSpecialties,
-      eq(advocates.id, advocateSpecialties.advocateId)
-    )
-    .leftJoin(specialties, eq(advocateSpecialties.specialtyId, specialties.id))
-    .where(whereClause);
+  // Only calculate total count on first page (expensive query with joins)
+  // Subsequent pages don't need it - client uses count from page 1
+  let totalCount: number;
 
-  const totalCount = Number(countResult[0].count);
-  const hasMore = offset + advocatesResult.length < totalCount;
+  if (page === 1) {
+    const countResult = await db
+      .select({ count: sql<number>`count(DISTINCT ${advocates.id})` })
+      .from(advocates)
+      .leftJoin(
+        advocateSpecialties,
+        eq(advocates.id, advocateSpecialties.advocateId)
+      )
+      .leftJoin(
+        specialties,
+        eq(advocateSpecialties.specialtyId, specialties.id)
+      )
+      .where(whereClause);
+
+    totalCount = Number(countResult[0].count);
+  } else {
+    // For page > 1, calculate hasMore based on result length
+    // Client already has total from page 1
+    totalCount = 0; // Not used by client for pages > 1
+  }
+
+  const hasMore =
+    page === 1
+      ? offset + advocatesResult.length < totalCount
+      : advocatesResult.length === limit; // If we got a full page, assume more exist
 
   return Response.json({
     data: advocatesResult,
