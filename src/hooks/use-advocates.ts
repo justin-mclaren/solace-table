@@ -58,7 +58,15 @@ async function fetchAdvocates({
     params.append("sortOrder", filters.sortOrder);
   }
 
-  const response = await fetch(`/api/advocates?${params.toString()}`);
+  const response = await fetch(`/api/advocates?${params.toString()}`, {
+    // ✅ AGGRESSIVE NEXT.JS CACHING: Cache forever (data is read-only)
+    next: {
+      revalidate: false, // Never auto-revalidate (cache indefinitely)
+      tags: ["advocates"], // For future cache invalidation
+    },
+    // 🔮 FUTURE: When advocates can be updated:
+    // next: { revalidate: 3600, tags: ["advocates"] } // Cache for 1 hour
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch advocates");
