@@ -3,6 +3,7 @@
 import { ChevronLeft, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DrawerTitle } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import type { AdvocateFilterState } from "../advocate-filters";
 
@@ -57,7 +58,7 @@ export function CityPage({
             </Button>
           )}
         </div>
-        <h2 className="text-lg font-semibold mb-3">City</h2>
+        <DrawerTitle className="text-lg font-semibold mb-3">City</DrawerTitle>
         <div className="relative">
           <Input
             type="text"

@@ -5,7 +5,6 @@ import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import type { AdvocateFilterState } from "../advocate-filters";
 import { MainPage } from "./main-page";
 import { CityPage } from "./city-page";
@@ -134,14 +133,8 @@ export function MobileAdvocateFilters({
       </DrawerTrigger>
 
       <DrawerContent className="h-[calc(100dvh-80px)] max-h-[calc(100dvh-80px)] p-0 overflow-hidden">
-        <div className="relative h-full overflow-hidden">
-          {/* Main Page */}
-          <div
-            className={cn(
-              "absolute inset-0 transition-transform duration-300 ease-in-out",
-              currentPage === "main" ? "translate-x-0" : "-translate-x-full"
-            )}
-          >
+        <div className="h-full overflow-hidden">
+          {currentPage === "main" && (
             <MainPage
               tempFilters={tempFilters}
               availableDegrees={availableDegrees}
@@ -152,15 +145,9 @@ export function MobileAdvocateFilters({
               onClearAll={handleClearAll}
               onApplyFilters={handleApplyFilters}
             />
-          </div>
+          )}
 
-          {/* City Page */}
-          <div
-            className={cn(
-              "absolute inset-0 transition-transform duration-300 ease-in-out",
-              currentPage === "city" ? "translate-x-0" : "translate-x-full"
-            )}
-          >
+          {currentPage === "city" && (
             <CityPage
               tempFilters={tempFilters}
               availableCities={availableCities}
@@ -172,15 +159,9 @@ export function MobileAdvocateFilters({
               onClearAll={handleClearCities}
               onNavigateBack={navigateToMain}
             />
-          </div>
+          )}
 
-          {/* Specialty Page */}
-          <div
-            className={cn(
-              "absolute inset-0 transition-transform duration-300 ease-in-out",
-              currentPage === "specialty" ? "translate-x-0" : "translate-x-full"
-            )}
-          >
+          {currentPage === "specialty" && (
             <SpecialtyPage
               tempFilters={tempFilters}
               availableSpecialties={availableSpecialties}
@@ -192,7 +173,7 @@ export function MobileAdvocateFilters({
               onClearAll={handleClearSpecialties}
               onNavigateBack={navigateToMain}
             />
-          </div>
+          )}
         </div>
       </DrawerContent>
     </Drawer>
