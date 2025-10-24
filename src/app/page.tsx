@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useTransition } from "react";
 import { DesktopDataTable } from "@/components/modules/desktop-data-table";
 import { MobileDataTable } from "@/components/modules/mobile-data-table";
 import { createColumns } from "@/components/modules/columns";
@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const isMobile = useIsMobile();
+  const [isPending, startTransition] = useTransition();
+
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -69,6 +71,13 @@ export default function Home() {
   const advocates = useMemo(() => {
     return data?.pages.flatMap((page) => page.data) || [];
   }, [data]);
+
+  // Wrap fetchNextPage in startTransition for non-blocking updates
+  const handleLoadMore = () => {
+    startTransition(() => {
+      fetchNextPage();
+    });
+  };
 
   // Fetch filter options from dedicated endpoint
   const { data: filterOptions } = useFilterOptions();
@@ -141,18 +150,18 @@ export default function Home() {
               <MobileDataTable<(typeof advocates)[number], unknown>
                 columns={createColumns as any}
                 data={advocates}
-                onLoadMore={fetchNextPage}
+                onLoadMore={handleLoadMore}
                 hasMore={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
+                isFetchingNextPage={isFetchingNextPage || isPending}
                 totalCount={totalCount}
               />
             ) : (
               <DesktopDataTable
                 columns={createColumns as any}
                 data={advocates}
-                onLoadMore={fetchNextPage}
+                onLoadMore={handleLoadMore}
                 hasMore={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage}
+                isFetchingNextPage={isFetchingNextPage || isPending}
                 totalCount={totalCount}
                 onSort={setSortState}
                 sortState={sortState}

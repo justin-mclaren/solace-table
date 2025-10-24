@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Advocate } from "@/types/advocate";
 import Avvvatars from "avvvatars-react";
 import { MoreHorizontal } from "lucide-react";
@@ -24,7 +25,11 @@ interface AdvocateCardProps {
   onViewDetails: (advocate: Advocate) => void;
 }
 
-export function AdvocateCard({ advocate, onViewDetails }: AdvocateCardProps) {
+// Memoize to prevent re-renders when parent updates (e.g., new page loads)
+export const AdvocateCard = memo(function AdvocateCard({
+  advocate,
+  onViewDetails,
+}: AdvocateCardProps) {
   const years = advocate.yearsOfExperience;
   const specialtiesText = advocate.specialties.join(", ");
 
@@ -122,4 +127,4 @@ export function AdvocateCard({ advocate, onViewDetails }: AdvocateCardProps) {
       </div>
     </div>
   );
-}
+});

@@ -94,6 +94,8 @@ export function DesktopDataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    // CRITICAL: Use stable row IDs from database to prevent re-renders on page append
+    getRowId: (row) => String((row as any).id),
     onColumnVisibilityChange: setColumnVisibility,
     state: {
       columnVisibility,
@@ -123,7 +125,7 @@ export function DesktopDataTable<TData, TValue>({
     count: totalRows,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => 53, // Approximate row height in pixels
-    overscan: 5, // Keep low for optimal performance - only 5 extra rows above/below viewport
+    overscan: 8,
   });
 
   // Infinite scroll with IntersectionObserver (better than scroll detection)
@@ -141,7 +143,7 @@ export function DesktopDataTable<TData, TValue>({
       },
       {
         root: tableContainerRef.current,
-        rootMargin: "200px", // Start loading 200px before sentinel visible
+        rootMargin: "600px", // Start loading 200px before sentinel visible
         threshold: 0.1,
       }
     );

@@ -184,7 +184,11 @@ export async function GET(request: Request) {
                   : sortField === "degree"
                     ? advocates.degree
                     : advocates.yearsOfExperience
-          )
+          ),
+      // CRITICAL: Secondary sort by ID for deterministic pagination
+      // Without this, advocates with same lastName/city/etc. can appear in different order
+      // across requests, causing duplicates and missing records across pages
+      asc(advocates.id)
     )
     .limit(limit)
     .offset(offset);
