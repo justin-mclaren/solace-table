@@ -66,5 +66,5 @@ In order to make it easy to demo the mobile experience especially, I've hosted t
 Scan the QR code below to check it out on your phone:
 
 <p align="center">
-  <img src="./solace-qr-code.png" alt="QR Code for Solace Table App" width="300"/>
+  <img src="https://solace-table.vercel.app/solace-qr-code.png" alt="QR Code for Solace Table Demo" width="300"/>
 </p>
