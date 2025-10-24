@@ -162,29 +162,18 @@ export async function GET(request: Request) {
     .where(whereClause)
     .groupBy(advocates.id)
     .orderBy(
-      sortOrder === "desc"
-        ? desc(
-            sortField === "lastName"
-              ? advocates.lastName
-              : sortField === "firstName"
-                ? advocates.firstName
-                : sortField === "city"
-                  ? advocates.city
-                  : sortField === "degree"
-                    ? advocates.degree
-                    : advocates.yearsOfExperience
-          )
-        : asc(
-            sortField === "lastName"
-              ? advocates.lastName
-              : sortField === "firstName"
-                ? advocates.firstName
-                : sortField === "city"
-                  ? advocates.city
-                  : sortField === "degree"
-                    ? advocates.degree
-                    : advocates.yearsOfExperience
-          ),
+      // Map sortField to corresponding column - cleaner than nested ternaries
+      (() => {
+        const sortColumns: Record<string, any> = {
+          lastName: advocates.lastName,
+          firstName: advocates.firstName,
+          city: advocates.city,
+          degree: advocates.degree,
+          yearsOfExperience: advocates.yearsOfExperience,
+        };
+        const column = sortColumns[sortField] || advocates.lastName;
+        return sortOrder === "desc" ? desc(column) : asc(column);
+      })(),
       // CRITICAL: Secondary sort by ID for deterministic pagination
       // Without this, advocates with same lastName/city/etc. can appear in different order
       // across requests, causing duplicates and missing records across pages
