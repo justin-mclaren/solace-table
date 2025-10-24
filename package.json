@@ -10,8 +10,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate": "drizzle-kit generate",
-    "migrate:up": "dotenv -e .env.local -- node ./src/db/migrate.js",
-    "seed": "dotenv -e .env.local -- tsx ./src/db/seed/advocates.ts",
+    "migrate:up": "node ./src/db/migrate.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -45,16 +44,14 @@
     "@types/node": "^20.14.12",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "dotenv-cli": "^10.0.0",
+    "dotenv": "^17.2.3",
     "drizzle-kit": "^0.23.0",
-    "esbuild-register": "^3.6.0",
     "eslint": "^9.38.0",
     "eslint-config-next": "16.0.0",
     "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.4.40",
     "prettier": "^3.6.2",
     "tailwindcss": "^3.4.7",
-    "tsx": "^4.20.6",
     "typescript": "^5.5.4"
   }
 }
