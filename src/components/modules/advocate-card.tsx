@@ -25,11 +25,7 @@ interface AdvocateCardProps {
 }
 
 export function AdvocateCard({ advocate, onViewDetails }: AdvocateCardProps) {
-  const initials = `${advocate.firstName[0]}${advocate.lastName[0]}`;
   const years = advocate.yearsOfExperience;
-  const phoneNumber = advocate.phoneNumber
-    .toString()
-    .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
   const specialtiesText = advocate.specialties.join(", ");
 
   return (
@@ -39,7 +35,7 @@ export function AdvocateCard({ advocate, onViewDetails }: AdvocateCardProps) {
         <div className="flex items-center gap-3">
           <Avvvatars
             value={`${advocate.firstName} ${advocate.lastName}`}
-            displayValue={initials}
+            displayValue={advocate.initials}
             size={40}
           />
           <div>
@@ -122,7 +118,7 @@ export function AdvocateCard({ advocate, onViewDetails }: AdvocateCardProps) {
       {/* Phone Number */}
       <div>
         <div className="text-muted-foreground text-xs mb-1">Phone Number</div>
-        <div className="text-sm font-mono">{phoneNumber}</div>
+        <div className="text-sm font-mono">{advocate.formattedPhoneNumber}</div>
       </div>
     </div>
   );

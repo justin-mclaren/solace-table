@@ -27,8 +27,6 @@ export function AdvocateDetailsDialog({
 }: AdvocateDetailsDialogProps) {
   if (!advocate) return null;
 
-  const initials = `${advocate.firstName[0]}${advocate.lastName[0]}`;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
@@ -36,7 +34,7 @@ export function AdvocateDetailsDialog({
           <div className="flex items-start gap-4">
             <Avvvatars
               value={`${advocate.firstName} ${advocate.lastName}`}
-              displayValue={initials}
+              displayValue={advocate.initials}
               size={80}
             />
             <div className="flex-1">
@@ -63,9 +61,7 @@ export function AdvocateDetailsDialog({
               Phone Number
             </h4>
             <p className="text-base font-mono">
-              {advocate.phoneNumber
-                .toString()
-                .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
+              {advocate.formattedPhoneNumber}
             </p>
           </div>
           <div className="grid gap-2">

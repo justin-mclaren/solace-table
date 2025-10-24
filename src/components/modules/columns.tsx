@@ -62,12 +62,11 @@ export const createColumns = (
     },
     cell: ({ row }) => {
       const advocate = row.original;
-      const initials = `${advocate.firstName[0]}${advocate.lastName[0]}`;
       return (
         <div className="flex items-center gap-3">
           <Avvvatars
             value={`${advocate.firstName} ${advocate.lastName}`}
-            displayValue={initials}
+            displayValue={advocate.initials}
             size={32}
           />
           <span className="font-medium">
@@ -215,12 +214,8 @@ export const createColumns = (
       return <div className="flex items-center h-10">Phone Number</div>;
     },
     cell: ({ row }) => {
-      const phoneNumber = row.getValue("phoneNumber") as number;
-      // Format phone number (assuming US format)
-      const formatted = phoneNumber
-        .toString()
-        .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-      return <div className="font-mono">{formatted}</div>;
+      const advocate = row.original;
+      return <div className="font-mono">{advocate.formattedPhoneNumber}</div>;
     },
   },
   {
