@@ -126,24 +126,32 @@ export function DesktopDataTable<TData, TValue>({
     overscan: 5, // Keep low for optimal performance - only 5 extra rows above/below viewport
   });
 
-  // Infinite scroll based on scroll position
+  // Infinite scroll with IntersectionObserver (better than scroll detection)
   const virtualItems = rowVirtualizer.getVirtualItems();
 
   React.useEffect(() => {
-    const [lastItem] = [...virtualItems].reverse();
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || !hasMore || isFetchingNextPage || !onLoadMore) return;
 
-    if (!lastItem) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      {
+        root: tableContainerRef.current,
+        rootMargin: "200px", // Start loading 200px before sentinel visible
+        threshold: 0.1,
+      }
+    );
 
-    // Trigger infinite scroll when within last 5 rows for smoother loading
-    if (
-      lastItem.index >= rows.length - 5 &&
-      hasMore &&
-      !isFetchingNextPage &&
-      onLoadMore
-    ) {
-      onLoadMore();
-    }
-  }, [hasMore, isFetchingNextPage, onLoadMore, rows.length, virtualItems]);
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [hasMore, isFetchingNextPage, onLoadMore]);
 
   return (
     <TooltipProvider>
@@ -322,6 +330,15 @@ export function DesktopDataTable<TData, TValue>({
               )}
             </TableBody>
           </Table>
+
+          {/* Intersection Observer sentinel for infinite scroll */}
+          {hasMore && (
+            <div
+              ref={loadMoreRef}
+              style={{ height: "20px", visibility: "hidden" }}
+              aria-hidden="true"
+            />
+          )}
 
           {/* End of list indicator */}
           {!isFetchingNextPage && !hasMore && rows.length > 0 && (
