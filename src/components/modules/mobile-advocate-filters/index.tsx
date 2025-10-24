@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { AdvocateFilterState } from "../advocate-filters";
 import { MainPage } from "./main-page";
 import { CityPage } from "./city-page";
@@ -34,6 +35,18 @@ export function MobileAdvocateFilters({
     city: "",
     specialty: "",
   });
+  const [shouldPreloadPages, setShouldPreloadPages] = useState(false);
+
+  // Preload City and Specialty pages after drawer opens (for smooth transitions)
+  useEffect(() => {
+    if (isOpen && !shouldPreloadPages) {
+      // Wait a brief moment for main page to render, then preload others
+      const timer = setTimeout(() => {
+        setShouldPreloadPages(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldPreloadPages]);
 
   // Count active filters (for badge on trigger button)
   const activeFilterCount =
@@ -55,6 +68,9 @@ export function MobileAdvocateFilters({
       setTempFilters(filters);
       setCurrentPage("main");
       setSearchTerms({ city: "", specialty: "" });
+    } else {
+      // Reset preload flag when closing for next open
+      setShouldPreloadPages(false);
     }
     setIsOpen(open);
   };
@@ -133,8 +149,14 @@ export function MobileAdvocateFilters({
       </DrawerTrigger>
 
       <DrawerContent className="h-[calc(100dvh-80px)] max-h-[calc(100dvh-80px)] p-0 overflow-hidden">
-        <div className="h-full overflow-hidden">
-          {currentPage === "main" && (
+        <div className="relative h-full overflow-hidden">
+          {/* Main Page - Always rendered */}
+          <div
+            className={cn(
+              "absolute inset-0 transition-transform duration-300 ease-in-out",
+              currentPage === "main" ? "translate-x-0" : "-translate-x-full"
+            )}
+          >
             <MainPage
               tempFilters={tempFilters}
               availableDegrees={availableDegrees}
@@ -145,34 +167,52 @@ export function MobileAdvocateFilters({
               onClearAll={handleClearAll}
               onApplyFilters={handleApplyFilters}
             />
+          </div>
+
+          {/* City Page - Preloaded after drawer opens */}
+          {shouldPreloadPages && (
+            <div
+              className={cn(
+                "absolute inset-0 transition-transform duration-300 ease-in-out",
+                currentPage === "city" ? "translate-x-0" : "translate-x-full"
+              )}
+            >
+              <CityPage
+                tempFilters={tempFilters}
+                availableCities={availableCities}
+                searchTerm={searchTerms.city}
+                onSearchChange={(value) =>
+                  setSearchTerms((prev) => ({ ...prev, city: value }))
+                }
+                onToggleSelection={toggleSelection}
+                onClearAll={handleClearCities}
+                onNavigateBack={navigateToMain}
+              />
+            </div>
           )}
 
-          {currentPage === "city" && (
-            <CityPage
-              tempFilters={tempFilters}
-              availableCities={availableCities}
-              searchTerm={searchTerms.city}
-              onSearchChange={(value) =>
-                setSearchTerms((prev) => ({ ...prev, city: value }))
-              }
-              onToggleSelection={toggleSelection}
-              onClearAll={handleClearCities}
-              onNavigateBack={navigateToMain}
-            />
-          )}
-
-          {currentPage === "specialty" && (
-            <SpecialtyPage
-              tempFilters={tempFilters}
-              availableSpecialties={availableSpecialties}
-              searchTerm={searchTerms.specialty}
-              onSearchChange={(value) =>
-                setSearchTerms((prev) => ({ ...prev, specialty: value }))
-              }
-              onToggleSelection={toggleSelection}
-              onClearAll={handleClearSpecialties}
-              onNavigateBack={navigateToMain}
-            />
+          {/* Specialty Page - Preloaded after drawer opens */}
+          {shouldPreloadPages && (
+            <div
+              className={cn(
+                "absolute inset-0 transition-transform duration-300 ease-in-out",
+                currentPage === "specialty"
+                  ? "translate-x-0"
+                  : "translate-x-full"
+              )}
+            >
+              <SpecialtyPage
+                tempFilters={tempFilters}
+                availableSpecialties={availableSpecialties}
+                searchTerm={searchTerms.specialty}
+                onSearchChange={(value) =>
+                  setSearchTerms((prev) => ({ ...prev, specialty: value }))
+                }
+                onToggleSelection={toggleSelection}
+                onClearAll={handleClearSpecialties}
+                onNavigateBack={navigateToMain}
+              />
+            </div>
           )}
         </div>
       </DrawerContent>

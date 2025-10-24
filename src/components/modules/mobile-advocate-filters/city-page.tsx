@@ -93,11 +93,16 @@ export function CityPage({
                   key={city}
                   onClick={() => onToggleSelection("cities", city)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-3 hover:bg-accent transition-colors",
+                    "w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-accent transition-colors",
                     isSelected && "bg-accent/50"
                   )}
                 >
-                  <span className={cn("text-sm", isSelected && "font-medium")}>
+                  <span
+                    className={cn(
+                      "text-sm text-left truncate",
+                      isSelected && "font-medium"
+                    )}
+                  >
                     {city}
                   </span>
                   {isSelected && (
