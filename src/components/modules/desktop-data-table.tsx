@@ -3,13 +3,9 @@
 import * as React from "react";
 import {
   ColumnDef,
-  ColumnFiltersState,
-  SortingState,
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -32,6 +28,8 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AdvocateDetailsDialog } from "./advocate-details-dialog";
+import { Advocate } from "@/types/advocate";
 
 interface DesktopDataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -40,6 +38,8 @@ interface DesktopDataTableProps<TData, TValue> {
   hasMore?: boolean;
   isFetchingNextPage?: boolean;
   totalCount?: number;
+  onSort?: (sort: { sortBy: string; sortOrder: "asc" | "desc" }) => void;
+  sortState?: { sortBy: string; sortOrder: "asc" | "desc" };
 }
 
 // Shared column styles for consistent header and body alignment
@@ -58,36 +58,46 @@ const COLUMN_STYLES = {
 } as const;
 
 export function DesktopDataTable<TData, TValue>({
-  columns,
+  columns: baseColumns,
   data,
   onLoadMore,
   hasMore,
   isFetchingNextPage,
   totalCount = 0,
+  onSort,
+  sortState,
 }: DesktopDataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+  const [selectedAdvocate, setSelectedAdvocate] =
+    React.useState<Advocate | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
+
+  const handleViewDetails = React.useCallback((advocate: Advocate) => {
+    setSelectedAdvocate(advocate);
+    setDialogOpen(true);
+  }, []);
+
+  const columns = React.useMemo(() => {
+    // Check if columns is a function (factory) or array
+    if (typeof baseColumns === "function") {
+      return (baseColumns as any)(handleViewDetails, onSort, sortState);
+    }
+    return baseColumns;
+  }, [baseColumns, handleViewDetails, onSort, sortState]);
 
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     state: {
-      sorting,
-      columnFilters,
       columnVisibility,
     },
+    manualSorting: true, // Sorting handled server-side
+    manualFiltering: true, // Filtering handled server-side
   });
 
   const { rows } = table.getRowModel();
@@ -125,6 +135,11 @@ export function DesktopDataTable<TData, TValue>({
   return (
     <TooltipProvider>
       <div className="w-full">
+        <AdvocateDetailsDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          advocate={selectedAdvocate}
+        />
         <div className="flex items-center justify-between py-4 px-4 md:px-0">
           <div className="text-sm text-muted-foreground">
             {totalCount} advocates found

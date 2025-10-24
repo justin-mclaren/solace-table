@@ -14,6 +14,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AdvocateCard } from "./advocate-card";
+import { AdvocateDetailsDialog } from "./advocate-details-dialog";
 import { Advocate } from "@/types/advocate";
 
 interface MobileDataTableProps<TData, TValue> {
@@ -33,13 +34,25 @@ export function MobileDataTable<TData = unknown, TValue = unknown>({
   totalCount = 0,
 }: MobileDataTableProps<TData, TValue>) {
   const loadTriggerRef = React.useRef<HTMLDivElement>(null);
+  const [selectedAdvocate, setSelectedAdvocate] =
+    React.useState<Advocate | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+
+  const handleViewDetails = React.useCallback((advocate: Advocate) => {
+    setSelectedAdvocate(advocate);
+    setDialogOpen(true);
+  }, []);
 
   // Memoize cards to prevent re-creating them on every render
   const cards = React.useMemo(() => {
     return data.map((item) => (
-      <AdvocateCard key={(item as Advocate).id} advocate={item as Advocate} />
+      <AdvocateCard
+        key={(item as Advocate).id}
+        advocate={item as Advocate}
+        onViewDetails={handleViewDetails}
+      />
     ));
-  }, [data]);
+  }, [data, handleViewDetails]);
 
   // Infinite scroll with Intersection Observer
   React.useEffect(() => {
@@ -65,6 +78,11 @@ export function MobileDataTable<TData = unknown, TValue = unknown>({
   return (
     <TooltipProvider>
       <div className="w-full">
+        <AdvocateDetailsDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          advocate={selectedAdvocate}
+        />
         <div className="flex items-center justify-between py-4 px-4">
           <div className="text-sm text-muted-foreground">
             {totalCount} advocates found

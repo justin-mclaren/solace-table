@@ -1,7 +1,12 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import {
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+  MoreHorizontal,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Advocate } from "@/types/advocate";
 import { Button } from "@/components/ui/button";
@@ -14,35 +19,44 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
 import Avvvatars from "avvvatars-react";
 
-export const columns: ColumnDef<Advocate>[] = [
+export const createColumns = (
+  onViewDetails: (advocate: Advocate) => void,
+  onSort?: (sort: { sortBy: string; sortOrder: "asc" | "desc" }) => void,
+  sortState?: { sortBy: string; sortOrder: "asc" | "desc" }
+): ColumnDef<Advocate>[] => [
   {
     id: "name",
     accessorKey: "lastName",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "lastName";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
           className="h-10 px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() =>
+            onSort?.({
+              sortBy: "lastName",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
@@ -62,24 +76,33 @@ export const columns: ColumnDef<Advocate>[] = [
         </div>
       );
     },
-    filterFn: (row, id, value) => {
-      const advocate = row.original;
-      const fullName =
-        `${advocate.firstName} ${advocate.lastName}`.toLowerCase();
-      return fullName.includes(value.toLowerCase());
-    },
   },
   {
     accessorKey: "city",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "city";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
           className="h-10 px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() =>
+            onSort?.({
+              sortBy: "city",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           City
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
@@ -87,15 +110,30 @@ export const columns: ColumnDef<Advocate>[] = [
   },
   {
     accessorKey: "degree",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "degree";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
           className="h-10 px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() =>
+            onSort?.({
+              sortBy: "degree",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           Degree
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
@@ -132,24 +170,33 @@ export const columns: ColumnDef<Advocate>[] = [
         </Tooltip>
       );
     },
-    filterFn: (row, id, value) => {
-      const specialties = row.getValue(id) as string[];
-      return specialties.some((specialty) =>
-        specialty.toLowerCase().includes(value.toLowerCase())
-      );
-    },
   },
   {
     accessorKey: "yearsOfExperience",
-    header: ({ column }) => {
+    header: () => {
+      const isSorted = sortState?.sortBy === "yearsOfExperience";
+      const isAsc = isSorted && sortState?.sortOrder === "asc";
       return (
         <Button
           variant="ghost"
           className="h-10 px-0"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          onClick={() =>
+            onSort?.({
+              sortBy: "yearsOfExperience",
+              sortOrder: isAsc ? "desc" : "asc",
+            })
+          }
         >
           Experience
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {isSorted ? (
+            isAsc ? (
+              <ChevronUp className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            )
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
         </Button>
       );
     },
@@ -181,106 +228,38 @@ export const columns: ColumnDef<Advocate>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const advocate = row.original;
-      const initials = `${advocate.firstName[0]}${advocate.lastName[0]}`;
 
       return (
-        <Dialog>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => {
-                  navigator.clipboard.writeText(advocate.id.toString());
-                  toast.success("Advocate ID copied to clipboard");
-                }}
-              >
-                Copy advocate ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DialogTrigger asChild>
-                <DropdownMenuItem>View details</DropdownMenuItem>
-              </DialogTrigger>
-              <DropdownMenuItem
-                onClick={() => {
-                  window.location.href = `tel:${advocate.phoneNumber}`;
-                }}
-              >
-                Contact advocate
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DialogContent className="sm:max-w-[550px]">
-            <DialogHeader>
-              <div className="flex items-start gap-4">
-                <Avvvatars
-                  value={`${advocate.firstName} ${advocate.lastName}`}
-                  displayValue={initials}
-                  size={80}
-                />
-                <div className="flex-1">
-                  <DialogTitle className="text-2xl">
-                    {advocate.firstName} {advocate.lastName}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {advocate.degree} • {advocate.yearsOfExperience}{" "}
-                    {advocate.yearsOfExperience === 1 ? "year" : "years"} of
-                    experience
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <h4 className="text-sm font-semibold text-muted-foreground">
-                  Location
-                </h4>
-                <p className="text-base">{advocate.city}</p>
-              </div>
-              <div className="grid gap-2">
-                <h4 className="text-sm font-semibold text-muted-foreground">
-                  Phone Number
-                </h4>
-                <p className="text-base font-mono">
-                  {advocate.phoneNumber
-                    .toString()
-                    .replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3")}
-                </p>
-              </div>
-              <div className="grid gap-2">
-                <h4 className="text-sm font-semibold text-muted-foreground">
-                  Specialties
-                </h4>
-                <div className="flex flex-col gap-2 max-h-[200px] overflow-y-auto pr-2">
-                  {advocate.specialties.map((specialty, index) => (
-                    <Badge
-                      key={index}
-                      variant="outline"
-                      className="w-fit text-sm py-1.5"
-                    >
-                      {specialty}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                onClick={() => {
-                  window.location.href = `tel:${advocate.phoneNumber}`;
-                }}
-                className="w-full sm:w-auto"
-              >
-                Contact Advocate
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(advocate.id.toString());
+                toast.success("Advocate ID copied to clipboard");
+              }}
+            >
+              Copy advocate ID
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onViewDetails(advocate)}>
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                window.location.href = `tel:${advocate.phoneNumber}`;
+              }}
+            >
+              Contact advocate
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       );
     },
   },

@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { DesktopDataTable } from "@/components/modules/desktop-data-table";
 import { MobileDataTable } from "@/components/modules/mobile-data-table";
-import { columns } from "@/components/modules/columns";
+import { createColumns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
 import { useAdvocates } from "@/hooks/use-advocates";
 import { useFilterOptions } from "@/hooks/use-filter-options";
@@ -40,6 +40,15 @@ export default function Home() {
     experienceRanges: [],
   });
 
+  // Sort state
+  const [sortState, setSortState] = useState<{
+    sortBy: string;
+    sortOrder: "asc" | "desc";
+  }>({
+    sortBy: "lastName",
+    sortOrder: "asc",
+  });
+
   // Fetch advocates with filters and search applied at the API level
   const {
     data,
@@ -53,6 +62,7 @@ export default function Home() {
   } = useAdvocates({
     search: debouncedSearch,
     ...filters,
+    ...sortState,
   });
 
   // Flatten the paginated data
@@ -129,7 +139,7 @@ export default function Home() {
             {/* Conditionally render only one table based on viewport */}
             {isMobile ? (
               <MobileDataTable<(typeof advocates)[number], unknown>
-                columns={columns as any}
+                columns={createColumns as any}
                 data={advocates}
                 onLoadMore={fetchNextPage}
                 hasMore={hasNextPage}
@@ -138,12 +148,14 @@ export default function Home() {
               />
             ) : (
               <DesktopDataTable
-                columns={columns}
+                columns={createColumns as any}
                 data={advocates}
                 onLoadMore={fetchNextPage}
                 hasMore={hasNextPage}
                 isFetchingNextPage={isFetchingNextPage}
                 totalCount={totalCount}
+                onSort={setSortState}
+                sortState={sortState}
               />
             )}
           </>

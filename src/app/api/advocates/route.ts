@@ -1,6 +1,17 @@
 import db from "@/db";
 import { advocates, specialties, advocateSpecialties } from "@/db/schema";
-import { sql, and, inArray, or, gte, lte, eq, ilike } from "drizzle-orm";
+import {
+  sql,
+  and,
+  inArray,
+  or,
+  gte,
+  lte,
+  eq,
+  ilike,
+  asc,
+  desc,
+} from "drizzle-orm";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,6 +26,22 @@ export async function GET(request: Request) {
     searchParams.get("specialties")?.split(",").filter(Boolean) || [];
   const experienceRanges =
     searchParams.get("experienceRanges")?.split(",").filter(Boolean) || [];
+
+  // Get sort parameters
+  const sortBy = searchParams.get("sortBy") || "lastName";
+  const sortOrder = searchParams.get("sortOrder") || "asc";
+
+  // Validate sortBy to prevent invalid field access
+  const validSortFields = [
+    "lastName",
+    "firstName",
+    "city",
+    "degree",
+    "yearsOfExperience",
+  ] as const;
+  const sortField = validSortFields.includes(sortBy as any)
+    ? sortBy
+    : "lastName";
 
   const offset = (page - 1) * limit;
 
@@ -131,6 +158,31 @@ export async function GET(request: Request) {
     .leftJoin(specialties, eq(advocateSpecialties.specialtyId, specialties.id))
     .where(whereClause)
     .groupBy(advocates.id)
+    .orderBy(
+      sortOrder === "desc"
+        ? desc(
+            sortField === "lastName"
+              ? advocates.lastName
+              : sortField === "firstName"
+                ? advocates.firstName
+                : sortField === "city"
+                  ? advocates.city
+                  : sortField === "degree"
+                    ? advocates.degree
+                    : advocates.yearsOfExperience
+          )
+        : asc(
+            sortField === "lastName"
+              ? advocates.lastName
+              : sortField === "firstName"
+                ? advocates.firstName
+                : sortField === "city"
+                  ? advocates.city
+                  : sortField === "degree"
+                    ? advocates.degree
+                    : advocates.yearsOfExperience
+          )
+    )
     .limit(limit)
     .offset(offset);
 

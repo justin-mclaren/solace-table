@@ -3,6 +3,7 @@
 import { Advocate } from "@/types/advocate";
 import Avvvatars from "avvvatars-react";
 import { MoreHorizontal } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,9 +21,10 @@ import {
 
 interface AdvocateCardProps {
   advocate: Advocate;
+  onViewDetails: (advocate: Advocate) => void;
 }
 
-export function AdvocateCard({ advocate }: AdvocateCardProps) {
+export function AdvocateCard({ advocate, onViewDetails }: AdvocateCardProps) {
   const initials = `${advocate.firstName[0]}${advocate.lastName[0]}`;
   const years = advocate.yearsOfExperience;
   const phoneNumber = advocate.phoneNumber
@@ -57,15 +59,24 @@ export function AdvocateCard({ advocate }: AdvocateCardProps) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() =>
-                navigator.clipboard.writeText(advocate.id.toString())
-              }
+              onClick={() => {
+                navigator.clipboard.writeText(advocate.id.toString());
+                toast.success("Advocate ID copied to clipboard");
+              }}
             >
               Copy advocate ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View details</DropdownMenuItem>
-            <DropdownMenuItem>Contact advocate</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onViewDetails(advocate)}>
+              View details
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                window.location.href = `tel:${advocate.phoneNumber}`;
+              }}
+            >
+              Contact advocate
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
