@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
@@ -35,6 +35,18 @@ export function MobileAdvocateFilters({
     city: "",
     specialty: "",
   });
+  const [shouldPreloadPages, setShouldPreloadPages] = useState(false);
+
+  // Preload City and Specialty pages after drawer opens (for smooth transitions)
+  useEffect(() => {
+    if (isOpen && !shouldPreloadPages) {
+      // Wait a brief moment for main page to render, then preload others
+      const timer = setTimeout(() => {
+        setShouldPreloadPages(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, shouldPreloadPages]);
 
   // Count active filters (for badge on trigger button)
   const activeFilterCount =
@@ -56,6 +68,9 @@ export function MobileAdvocateFilters({
       setTempFilters(filters);
       setCurrentPage("main");
       setSearchTerms({ city: "", specialty: "" });
+    } else {
+      // Reset preload flag when closing for next open
+      setShouldPreloadPages(false);
     }
     setIsOpen(open);
   };
@@ -135,7 +150,7 @@ export function MobileAdvocateFilters({
 
       <DrawerContent className="h-[calc(100dvh-80px)] max-h-[calc(100dvh-80px)] p-0 overflow-hidden">
         <div className="relative h-full overflow-hidden">
-          {/* Main Page */}
+          {/* Main Page - Always rendered */}
           <div
             className={cn(
               "absolute inset-0 transition-transform duration-300 ease-in-out",
@@ -154,45 +169,51 @@ export function MobileAdvocateFilters({
             />
           </div>
 
-          {/* City Page */}
-          <div
-            className={cn(
-              "absolute inset-0 transition-transform duration-300 ease-in-out",
-              currentPage === "city" ? "translate-x-0" : "translate-x-full"
-            )}
-          >
-            <CityPage
-              tempFilters={tempFilters}
-              availableCities={availableCities}
-              searchTerm={searchTerms.city}
-              onSearchChange={(value) =>
-                setSearchTerms((prev) => ({ ...prev, city: value }))
-              }
-              onToggleSelection={toggleSelection}
-              onClearAll={handleClearCities}
-              onNavigateBack={navigateToMain}
-            />
-          </div>
+          {/* City Page - Preloaded after drawer opens */}
+          {shouldPreloadPages && (
+            <div
+              className={cn(
+                "absolute inset-0 transition-transform duration-300 ease-in-out",
+                currentPage === "city" ? "translate-x-0" : "translate-x-full"
+              )}
+            >
+              <CityPage
+                tempFilters={tempFilters}
+                availableCities={availableCities}
+                searchTerm={searchTerms.city}
+                onSearchChange={(value) =>
+                  setSearchTerms((prev) => ({ ...prev, city: value }))
+                }
+                onToggleSelection={toggleSelection}
+                onClearAll={handleClearCities}
+                onNavigateBack={navigateToMain}
+              />
+            </div>
+          )}
 
-          {/* Specialty Page */}
-          <div
-            className={cn(
-              "absolute inset-0 transition-transform duration-300 ease-in-out",
-              currentPage === "specialty" ? "translate-x-0" : "translate-x-full"
-            )}
-          >
-            <SpecialtyPage
-              tempFilters={tempFilters}
-              availableSpecialties={availableSpecialties}
-              searchTerm={searchTerms.specialty}
-              onSearchChange={(value) =>
-                setSearchTerms((prev) => ({ ...prev, specialty: value }))
-              }
-              onToggleSelection={toggleSelection}
-              onClearAll={handleClearSpecialties}
-              onNavigateBack={navigateToMain}
-            />
-          </div>
+          {/* Specialty Page - Preloaded after drawer opens */}
+          {shouldPreloadPages && (
+            <div
+              className={cn(
+                "absolute inset-0 transition-transform duration-300 ease-in-out",
+                currentPage === "specialty"
+                  ? "translate-x-0"
+                  : "translate-x-full"
+              )}
+            >
+              <SpecialtyPage
+                tempFilters={tempFilters}
+                availableSpecialties={availableSpecialties}
+                searchTerm={searchTerms.specialty}
+                onSearchChange={(value) =>
+                  setSearchTerms((prev) => ({ ...prev, specialty: value }))
+                }
+                onToggleSelection={toggleSelection}
+                onClearAll={handleClearSpecialties}
+                onNavigateBack={navigateToMain}
+              />
+            </div>
+          )}
         </div>
       </DrawerContent>
     </Drawer>

@@ -2,6 +2,7 @@
 
 import { ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DrawerTitle } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import type { AdvocateFilterState } from "../advocate-filters";
 
@@ -41,7 +42,7 @@ export function MainPage({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-white">
-        <h2 className="text-lg font-semibold">Filters</h2>
+        <DrawerTitle className="text-lg font-semibold">Filters</DrawerTitle>
         {activeFilterCount > 0 && (
           <Button
             variant="ghost"

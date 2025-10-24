@@ -183,6 +183,10 @@ export function DataTable<TData, TValue>({
     const sentinel = loadMoreRef.current;
     if (!sentinel || !hasMore || isFetchingNextPage || !onLoadMore) return;
 
+    // Use smaller rootMargin on mobile to prevent continuous loading
+    // Mobile screens are ~375-428px wide, so 700px margin would always trigger
+    const rootMargin = isMobile ? "200px" : "700px";
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
@@ -191,7 +195,7 @@ export function DataTable<TData, TValue>({
       },
       {
         root: tableContainerRef.current,
-        rootMargin: "700px",
+        rootMargin,
         threshold: 0.1,
       }
     );
@@ -201,7 +205,7 @@ export function DataTable<TData, TValue>({
     return () => {
       observer.disconnect();
     };
-  }, [hasMore, isFetchingNextPage, onLoadMore]);
+  }, [hasMore, isFetchingNextPage, onLoadMore, isMobile]);
 
   return (
     <TooltipProvider>
@@ -246,7 +250,7 @@ export function DataTable<TData, TValue>({
 
         <div
           ref={tableContainerRef}
-          className="rounded-md md:border border-0 md:bg-white bg-transparent pl-4 md:px-0"
+          className="rounded-md md:border border-0 md:bg-white bg-transparent px-4 md:px-0"
           style={{ height: "calc(100vh - 350px)", overflow: "auto" }}
         >
           {/* Sticky Header - hidden on mobile */}
@@ -282,7 +286,7 @@ export function DataTable<TData, TValue>({
           </div>
 
           {/* Scrollable Body */}
-          <Table>
+          <Table style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
             <TableBody
               style={{
                 height: `${rowVirtualizer.getTotalSize()}px`,

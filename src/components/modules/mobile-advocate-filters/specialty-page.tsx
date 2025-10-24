@@ -3,6 +3,7 @@
 import { ChevronLeft, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DrawerTitle } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import type { AdvocateFilterState } from "../advocate-filters";
 
@@ -57,7 +58,9 @@ export function SpecialtyPage({
             </Button>
           )}
         </div>
-        <h2 className="text-lg font-semibold mb-3">Specialties</h2>
+        <DrawerTitle className="text-lg font-semibold mb-3">
+          Specialties
+        </DrawerTitle>
         <div className="relative">
           <Input
             type="text"
@@ -94,11 +97,16 @@ export function SpecialtyPage({
                   key={specialty}
                   onClick={() => onToggleSelection("specialties", specialty)}
                   className={cn(
-                    "w-full flex items-center justify-between px-4 py-3 hover:bg-accent transition-colors",
+                    "w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-accent transition-colors",
                     isSelected && "bg-accent/50"
                   )}
                 >
-                  <span className={cn("text-sm", isSelected && "font-medium")}>
+                  <span
+                    className={cn(
+                      "text-sm text-left truncate",
+                      isSelected && "font-medium"
+                    )}
+                  >
                     {specialty}
                   </span>
                   {isSelected && (
