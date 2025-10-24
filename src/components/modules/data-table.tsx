@@ -199,7 +199,7 @@ export function DataTable<TData, TValue>({
         />
         <div className="flex items-center justify-between py-4 px-4 md:px-0">
           <div className="text-sm text-muted-foreground">
-            {totalCount} advocates found
+            {totalCount} {totalCount === 1 ? "advocate" : "advocates"} found
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
