@@ -1,3 +1,7 @@
+# Database Seeding
+
+In order to demonstrate my infinite scroll feature and the table's performance, I updated the database seeder to add 10,000 records using faker.js to generate data. 
+
 # Caching Strategy
 
 My favorite feature of Next.js is its fetch caching with deterministic cache busting. You get the performance of cached data with the immediacy of real-time updates. It's the best of both worlds.
