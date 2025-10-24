@@ -202,7 +202,7 @@ export const createColumns = (
     cell: ({ row }) => {
       const years = row.getValue("yearsOfExperience") as number;
       return (
-        <div className="text-center">
+        <div className="md:text-center text-left">
           {years} {years === 1 ? "year" : "years"}
         </div>
       );

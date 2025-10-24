@@ -154,18 +154,18 @@ export function DataTable<TData, TValue>({
 
   const { rows } = table.getRowModel();
 
-  // Add skeleton rows count
-  const totalRows = rows.length + (isFetchingNextPage ? 5 : 0);
+  const skeletonCount = isMobile ? 3 : 8; // Fewer on mobile (tall cards), moderate on desktop
+  const totalRows = rows.length + (isFetchingNextPage ? skeletonCount : 0);
 
   // Virtualizer - dynamic row height for mobile/desktop
   const rowVirtualizer = useVirtualizer({
     count: totalRows,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: React.useCallback(() => {
-      // Mobile: ~320px for stacked layout, Desktop: 53px for row
-      return isMobile ? 320 : 53;
+      // Mobile: ~400px for stacked layout (more height for all fields), Desktop: 53px for row
+      return isMobile ? 400 : 53;
     }, [isMobile]),
-    overscan: 15,
+    overscan: 10,
   });
 
   // Force virtualizer to remeasure when switching between mobile/desktop
@@ -177,7 +177,6 @@ export function DataTable<TData, TValue>({
     virtualizerRef.current.measure();
   }, [isMobile]);
 
-  // Infinite scroll with IntersectionObserver (better than scroll detection)
   const virtualItems = rowVirtualizer.getVirtualItems();
 
   React.useEffect(() => {
@@ -192,7 +191,7 @@ export function DataTable<TData, TValue>({
       },
       {
         root: tableContainerRef.current,
-        rootMargin: "800px", // Start loading 800px before sentinel visible
+        rootMargin: "700px",
         threshold: 0.1,
       }
     );
@@ -214,7 +213,8 @@ export function DataTable<TData, TValue>({
         />
         <div className="flex items-center justify-between py-4 px-4 md:px-0">
           <div className="text-sm text-muted-foreground">
-            {totalCount} {totalCount === 1 ? "advocate" : "advocates"} found
+            {totalCount.toLocaleString()}{" "}
+            {totalCount === 1 ? "advocate" : "advocates"} found
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -246,7 +246,7 @@ export function DataTable<TData, TValue>({
 
         <div
           ref={tableContainerRef}
-          className="rounded-md border bg-white"
+          className="rounded-md md:border border-0 md:bg-white bg-transparent pl-4 md:px-0"
           style={{ height: "calc(100vh - 350px)", overflow: "auto" }}
         >
           {/* Sticky Header - hidden on mobile */}
@@ -308,7 +308,7 @@ export function DataTable<TData, TValue>({
                       return (
                         <TableRow
                           key={`skeleton-${virtualRow.index}`}
-                          className="md:flex-row flex-col md:gap-0 gap-2 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-3 md:mx-0 mx-4 md:p-0 p-4"
+                          className="md:flex-row flex-col md:gap-0 gap-2 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-4 md:mx-0 md:p-0 p-4"
                           style={{
                             position: "absolute",
                             top: 0,
@@ -377,7 +377,7 @@ export function DataTable<TData, TValue>({
                     return (
                       <TableRow
                         key={row.id}
-                        className="md:flex-row flex-col md:gap-0 gap-2 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-3 md:mx-0 mx-4 md:p-0 p-4 md:bg-transparent bg-white"
+                        className="md:flex md:flex-row md:gap-0 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-4 md:mx-0 md:p-0 p-4 md:bg-transparent bg-white md:shadow-none shadow-sm"
                         style={{
                           position: "absolute",
                           top: 0,
@@ -385,43 +385,70 @@ export function DataTable<TData, TValue>({
                           width: "100%",
                           height: `${virtualRow.size}px`,
                           transform: `translateY(${virtualRow.start}px)`,
-                          display: "flex",
-                          alignItems: "center",
+                          // Mobile: CSS Grid, Desktop: Flexbox
+                          display: isMobile ? "grid" : "flex",
+                          gridTemplateColumns: isMobile
+                            ? "1fr auto"
+                            : undefined,
+                          gridTemplateRows: isMobile
+                            ? "auto repeat(5, auto)"
+                            : undefined,
+                          alignItems: isMobile ? "stretch" : "center",
                           // Performance: Isolate layout calculations
                           contain: "layout style paint",
                           // Performance: Hint browser about transform animations
                           willChange: "transform",
                         }}
                       >
-                        {row.getVisibleCells().map((cell) => {
+                        {row.getVisibleCells().map((cell, cellIndex) => {
                           const style = COLUMN_STYLES[cell.column.id];
                           const columnId = cell.column.id;
                           const mobileLabel = MOBILE_LABELS[columnId];
+                          const isNameCell = columnId === "name";
+                          const isActionsCell = columnId === "actions";
 
                           return (
                             <TableCell
                               key={cell.id}
                               style={{
                                 // Desktop: Use COLUMN_STYLES
-                                // Mobile: Full width, no flex
+                                // Mobile: Grid positioning
                                 ...(!isMobile
                                   ? style
                                   : {
                                       width: "100%",
                                       flex: "none",
+                                      display: "block",
+                                      // Grid positioning on mobile
+                                      gridColumn: isActionsCell
+                                        ? "2"
+                                        : isNameCell
+                                          ? "1"
+                                          : "1 / -1",
+                                      gridRow: isActionsCell
+                                        ? "1"
+                                        : isNameCell
+                                          ? "1"
+                                          : "auto",
                                     }),
                               }}
-                              className="md:border-0 border-0 md:p-4 p-2 first:pt-0 last:pb-0"
+                              className="md:border-0 border-0 md:p-4 p-0 md:py-0 py-2 first:pt-0 last:pb-0"
                               data-label={mobileLabel}
                             >
-                              {/* Mobile: Show label */}
-                              {mobileLabel && (
-                                <div className="md:hidden text-xs text-muted-foreground font-medium mb-1">
+                              {/* Mobile: Show label (except for actions which is in top right) */}
+                              {mobileLabel && !isActionsCell && (
+                                <div className="md:hidden text-xs text-muted-foreground font-medium mb-1 uppercase tracking-wide">
                                   {mobileLabel}
                                 </div>
                               )}
                               {/* Content */}
-                              <div className="md:contents">
+                              <div
+                                className={
+                                  isActionsCell
+                                    ? "md:contents flex justify-end"
+                                    : "md:contents"
+                                }
+                              >
                                 {flexRender(
                                   cell.column.columnDef.cell,
                                   cell.getContext()
