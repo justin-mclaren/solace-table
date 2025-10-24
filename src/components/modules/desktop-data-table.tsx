@@ -266,6 +266,10 @@ export function DesktopDataTable<TData, TValue>({
                             transform: `translateY(${virtualRow.start}px)`,
                             display: "flex",
                             alignItems: "center",
+                            // Performance: Isolate layout calculations
+                            contain: "layout style paint",
+                            // Performance: Hint browser about transform animations
+                            willChange: "transform",
                           }}
                         >
                           <TableCell style={COLUMN_STYLES.name}>
@@ -309,6 +313,10 @@ export function DesktopDataTable<TData, TValue>({
                           transform: `translateY(${virtualRow.start}px)`,
                           display: "flex",
                           alignItems: "center",
+                          // Performance: Isolate layout calculations
+                          contain: "layout style paint",
+                          // Performance: Hint browser about transform animations
+                          willChange: "transform",
                         }}
                       >
                         {row.getVisibleCells().map((cell) => {
