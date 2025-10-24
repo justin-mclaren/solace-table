@@ -31,7 +31,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AdvocateDetailsDialog } from "./advocate-details-dialog";
 import { Advocate } from "@/types/advocate";
 
-interface DesktopDataTableProps<TData, TValue> {
+interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onLoadMore?: () => void;
@@ -58,7 +58,7 @@ const COLUMN_STYLES: Record<string, React.CSSProperties> = {
   actions: { flex: "0.5 0 0", minWidth: "60px" }, // Actions - smallest
 };
 
-export function DesktopDataTable<TData, TValue>({
+export function DataTable<TData, TValue>({
   columns: baseColumns,
   data,
   onLoadMore,
@@ -67,15 +67,41 @@ export function DesktopDataTable<TData, TValue>({
   totalCount = 0,
   onSort,
   sortState,
-}: DesktopDataTableProps<TData, TValue>) {
+}: DataTableProps<TData, TValue>) {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+  const [isMobile, setIsMobile] = React.useState(false);
   const [selectedAdvocate, setSelectedAdvocate] =
     React.useState<Advocate | null>(null);
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const tableContainerRef = React.useRef<HTMLDivElement>(null);
   const loadMoreRef = React.useRef<HTMLDivElement>(null);
+
+  // Track mobile/desktop breakpoint for dynamic row heights
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkMobile();
+
+    // Debounce resize handler - only update after user stops resizing (300ms delay)
+    // Prevents expensive remeasures during continuous resize drag
+    let resizeTimer: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(checkMobile, 300);
+    };
+
+    // Listen for resize
+    window.addEventListener("resize", debouncedResize);
+    return () => {
+      window.removeEventListener("resize", debouncedResize);
+      clearTimeout(resizeTimer);
+    };
+  }, []);
 
   const handleViewDetails = React.useCallback((advocate: Advocate) => {
     setSelectedAdvocate(advocate);
@@ -120,13 +146,21 @@ export function DesktopDataTable<TData, TValue>({
   // Add skeleton rows count
   const totalRows = rows.length + (isFetchingNextPage ? 5 : 0);
 
-  // Virtualizer
+  // Virtualizer - dynamic row height for mobile/desktop
   const rowVirtualizer = useVirtualizer({
     count: totalRows,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 53, // Approximate row height in pixels
+    estimateSize: () => {
+      // Mobile: ~320px for stacked layout, Desktop: 53px for row
+      return isMobile ? 320 : 53;
+    },
     overscan: 15,
   });
+
+  // Force virtualizer to remeasure when switching between mobile/desktop
+  React.useEffect(() => {
+    rowVirtualizer.measure();
+  }, [isMobile, rowVirtualizer]);
 
   // Infinite scroll with IntersectionObserver (better than scroll detection)
   const virtualItems = rowVirtualizer.getVirtualItems();
@@ -200,8 +234,8 @@ export function DesktopDataTable<TData, TValue>({
           className="rounded-md border bg-white"
           style={{ height: "calc(100vh - 350px)", overflow: "auto" }}
         >
-          {/* Sticky Header */}
-          <div className="sticky top-0 z-10 border-b bg-white">
+          {/* Sticky Header - hidden on mobile */}
+          <div className="sticky top-0 z-10 border-b bg-white md:block hidden">
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -259,6 +293,7 @@ export function DesktopDataTable<TData, TValue>({
                       return (
                         <TableRow
                           key={`skeleton-${virtualRow.index}`}
+                          className="md:flex-row flex-col md:gap-0 gap-2 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-3 md:mx-0 mx-4 md:p-0 p-4"
                           style={{
                             position: "absolute",
                             top: 0,
@@ -274,28 +309,49 @@ export function DesktopDataTable<TData, TValue>({
                             willChange: "transform",
                           }}
                         >
-                          <TableCell style={COLUMN_STYLES.name}>
+                          <TableCell
+                            style={COLUMN_STYLES.name}
+                            className="md:border-0 border-0"
+                          >
                             <div className="flex items-center gap-3">
                               <Skeleton className="h-8 w-8 rounded-full" />
                               <Skeleton className="h-4 w-[120px]" />
                             </div>
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES.city}>
+                          <TableCell
+                            style={COLUMN_STYLES.city}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[100px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES.degree}>
+                          <TableCell
+                            style={COLUMN_STYLES.degree}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[80px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES.specialties}>
+                          <TableCell
+                            style={COLUMN_STYLES.specialties}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[200px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES.yearsOfExperience}>
+                          <TableCell
+                            style={COLUMN_STYLES.yearsOfExperience}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[40px] mx-auto" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES.phoneNumber}>
+                          <TableCell
+                            style={COLUMN_STYLES.phoneNumber}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-4 w-[130px]" />
                           </TableCell>
-                          <TableCell style={COLUMN_STYLES.actions}>
+                          <TableCell
+                            style={COLUMN_STYLES.actions}
+                            className="md:border-0 border-0 md:block hidden"
+                          >
                             <Skeleton className="h-8 w-8" />
                           </TableCell>
                         </TableRow>
@@ -306,6 +362,7 @@ export function DesktopDataTable<TData, TValue>({
                     return (
                       <TableRow
                         key={row.id}
+                        className="md:flex-row flex-col md:gap-0 gap-2 md:border-0 border md:rounded-none rounded-lg md:mb-0 mb-3 md:mx-0 mx-4 md:p-0 p-4 md:bg-transparent bg-white"
                         style={{
                           position: "absolute",
                           top: 0,
@@ -323,13 +380,48 @@ export function DesktopDataTable<TData, TValue>({
                       >
                         {row.getVisibleCells().map((cell) => {
                           const style = COLUMN_STYLES[cell.column.id];
+                          const columnId = cell.column.id;
+
+                          // Get label for mobile
+                          const mobileLabels: Record<string, string> = {
+                            name: "Name",
+                            city: "City",
+                            degree: "Degree",
+                            specialties: "Specialties",
+                            yearsOfExperience: "Years of Experience",
+                            phoneNumber: "Phone Number",
+                            actions: "",
+                          };
 
                           return (
-                            <TableCell key={cell.id} style={style}>
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
+                            <TableCell
+                              key={cell.id}
+                              style={{
+                                // Desktop: Use COLUMN_STYLES
+                                // Mobile: Full width, no flex
+                                ...(!isMobile
+                                  ? style
+                                  : {
+                                      width: "100%",
+                                      flex: "none",
+                                    }),
+                              }}
+                              className="md:border-0 border-0 md:p-4 p-2 first:pt-0 last:pb-0"
+                              data-label={mobileLabels[columnId]}
+                            >
+                              {/* Mobile: Show label */}
+                              {mobileLabels[columnId] && (
+                                <div className="md:hidden text-xs text-muted-foreground font-medium mb-1">
+                                  {mobileLabels[columnId]}
+                                </div>
                               )}
+                              {/* Content */}
+                              <div className="md:contents">
+                                {flexRender(
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
+                                )}
+                              </div>
                             </TableCell>
                           );
                         })}

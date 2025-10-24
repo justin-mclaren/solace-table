@@ -1,13 +1,11 @@
 "use client";
 
 import { useMemo, useState, useEffect, useTransition } from "react";
-import { DesktopDataTable } from "@/components/modules/desktop-data-table";
-import { MobileDataTable } from "@/components/modules/mobile-data-table";
+import { DataTable } from "@/components/modules/data-table";
 import { createColumns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
 import { useAdvocates } from "@/hooks/use-advocates";
 import { useFilterOptions } from "@/hooks/use-filter-options";
-import { useIsMobile } from "@/hooks/use-is-mobile";
 import {
   AdvocateFilters,
   AdvocateFilterState,
@@ -18,7 +16,6 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const isMobile = useIsMobile();
   const [isPending, startTransition] = useTransition();
 
   // Search state
@@ -145,28 +142,17 @@ export default function Home() {
               />
             </div>
 
-            {/* Conditionally render only one table based on viewport */}
-            {isMobile ? (
-              <MobileDataTable<(typeof advocates)[number], unknown>
-                columns={createColumns as any}
-                data={advocates}
-                onLoadMore={handleLoadMore}
-                hasMore={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage || isPending}
-                totalCount={totalCount}
-              />
-            ) : (
-              <DesktopDataTable
-                columns={createColumns as any}
-                data={advocates}
-                onLoadMore={handleLoadMore}
-                hasMore={hasNextPage}
-                isFetchingNextPage={isFetchingNextPage || isPending}
-                totalCount={totalCount}
-                onSort={setSortState}
-                sortState={sortState}
-              />
-            )}
+            {/* Single unified table - CSS handles mobile/desktop layout */}
+            <DataTable
+              columns={createColumns as any}
+              data={advocates}
+              onLoadMore={handleLoadMore}
+              hasMore={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage || isPending}
+              totalCount={totalCount}
+              onSort={setSortState}
+              sortState={sortState}
+            />
           </>
         )}
       </div>
