@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useState, useEffect, useTransition } from "react";
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useTransition,
+  useCallback,
+} from "react";
 import { DataTable } from "@/components/modules/data-table";
 import { createColumns } from "@/components/modules/columns";
 import { TableSkeleton } from "@/components/modules/table-skeleton";
@@ -48,6 +54,14 @@ export default function Home() {
     sortOrder: "asc",
   });
 
+  // Stable sort handler to prevent column re-creation
+  const handleSort = useCallback(
+    (sort: { sortBy: string; sortOrder: "asc" | "desc" }) => {
+      setSortState(sort);
+    },
+    []
+  );
+
   // Fetch advocates with filters and search applied at the API level
   const {
     data,
@@ -70,11 +84,12 @@ export default function Home() {
   }, [data]);
 
   // Wrap fetchNextPage in startTransition for non-blocking updates
-  const handleLoadMore = () => {
+  // CRITICAL: useCallback to prevent IntersectionObserver recreation on every render
+  const handleLoadMore = useCallback(() => {
     startTransition(() => {
       fetchNextPage();
     });
-  };
+  }, [fetchNextPage]);
 
   // Fetch filter options from dedicated endpoint
   const { data: filterOptions } = useFilterOptions();
@@ -150,7 +165,7 @@ export default function Home() {
               hasMore={hasNextPage}
               isFetchingNextPage={isFetchingNextPage || isPending}
               totalCount={totalCount}
-              onSort={setSortState}
+              onSort={handleSort}
               sortState={sortState}
             />
           </>

@@ -58,6 +58,17 @@ const COLUMN_STYLES: Record<string, React.CSSProperties> = {
   actions: { flex: "0.5 0 0", minWidth: "60px" }, // Actions - smallest
 };
 
+// Mobile labels - reused across all cells to avoid recreation
+const MOBILE_LABELS: Record<string, string> = {
+  name: "Name",
+  city: "City",
+  degree: "Degree",
+  specialties: "Specialties",
+  yearsOfExperience: "Years of Experience",
+  phoneNumber: "Phone Number",
+  actions: "",
+};
+
 export function DataTable<TData, TValue>({
   columns: baseColumns,
   data,
@@ -150,17 +161,21 @@ export function DataTable<TData, TValue>({
   const rowVirtualizer = useVirtualizer({
     count: totalRows,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => {
+    estimateSize: React.useCallback(() => {
       // Mobile: ~320px for stacked layout, Desktop: 53px for row
       return isMobile ? 320 : 53;
-    },
+    }, [isMobile]),
     overscan: 15,
   });
 
   // Force virtualizer to remeasure when switching between mobile/desktop
+  // CRITICAL: Use ref to avoid dependency on rowVirtualizer instance
+  const virtualizerRef = React.useRef(rowVirtualizer);
+  virtualizerRef.current = rowVirtualizer;
+
   React.useEffect(() => {
-    rowVirtualizer.measure();
-  }, [isMobile, rowVirtualizer]);
+    virtualizerRef.current.measure();
+  }, [isMobile]);
 
   // Infinite scroll with IntersectionObserver (better than scroll detection)
   const virtualItems = rowVirtualizer.getVirtualItems();
@@ -381,17 +396,7 @@ export function DataTable<TData, TValue>({
                         {row.getVisibleCells().map((cell) => {
                           const style = COLUMN_STYLES[cell.column.id];
                           const columnId = cell.column.id;
-
-                          // Get label for mobile
-                          const mobileLabels: Record<string, string> = {
-                            name: "Name",
-                            city: "City",
-                            degree: "Degree",
-                            specialties: "Specialties",
-                            yearsOfExperience: "Years of Experience",
-                            phoneNumber: "Phone Number",
-                            actions: "",
-                          };
+                          const mobileLabel = MOBILE_LABELS[columnId];
 
                           return (
                             <TableCell
@@ -407,12 +412,12 @@ export function DataTable<TData, TValue>({
                                     }),
                               }}
                               className="md:border-0 border-0 md:p-4 p-2 first:pt-0 last:pb-0"
-                              data-label={mobileLabels[columnId]}
+                              data-label={mobileLabel}
                             >
                               {/* Mobile: Show label */}
-                              {mobileLabels[columnId] && (
+                              {mobileLabel && (
                                 <div className="md:hidden text-xs text-muted-foreground font-medium mb-1">
-                                  {mobileLabels[columnId]}
+                                  {mobileLabel}
                                 </div>
                               )}
                               {/* Content */}
