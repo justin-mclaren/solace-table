@@ -160,7 +160,16 @@ export async function GET(request: Request) {
     )
     .leftJoin(specialties, eq(advocateSpecialties.specialtyId, specialties.id))
     .where(whereClause)
-    .groupBy(advocates.id)
+    .groupBy(
+      advocates.id,
+      advocates.firstName,
+      advocates.lastName,
+      advocates.city,
+      advocates.degree,
+      advocates.yearsOfExperience,
+      advocates.phoneNumber,
+      advocates.createdAt
+    )
     .orderBy(
       // Map sortField to corresponding column - cleaner than nested ternaries
       (() => {
